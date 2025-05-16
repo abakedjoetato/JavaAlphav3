@@ -33,10 +33,10 @@ public class LinkedPlayer {
         this.updated = this.created;
     }
     
-    public LinkedPlayer(long discordId, long playerId) {
+    public LinkedPlayer(long discordId, ObjectId playerId) {
         this.discordId = discordId;
-        this.mainPlayerId = String.valueOf(playerId);
-        this.mainPlayerName = "Player-" + playerId;
+        this.mainPlayerId = playerId.toString();
+        this.mainPlayerName = "Player-" + playerId.toString();
         this.altPlayerIds = new ArrayList<>();
         this.created = System.currentTimeMillis();
         this.updated = this.created;
@@ -72,6 +72,10 @@ public class LinkedPlayer {
     
     public void setMainPlayerId(String mainPlayerId) {
         this.mainPlayerId = mainPlayerId;
+    }
+    
+    public void setMainPlayerId(ObjectId mainPlayerId) {
+        this.mainPlayerId = mainPlayerId.toString();
     }
     
     public List<String> getAltPlayerIds() {

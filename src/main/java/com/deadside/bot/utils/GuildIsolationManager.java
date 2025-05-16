@@ -97,7 +97,7 @@ public class GuildIsolationManager {
         lastGuildDataAccess.put(guildId, System.currentTimeMillis());
         
         // Get servers from database
-        return gameServerRepository.findByGuildId(guildId);
+        return gameServerRepository.findAllByGuildId(guildId);
     }
     
     /**
@@ -106,7 +106,7 @@ public class GuildIsolationManager {
      * @param serverId The game server ID
      * @return True if the server belongs to this guild
      */
-    public boolean isServerInGuild(long guildId, long serverId) {
+    public boolean isServerInGuild(long guildId, String serverId) {
         GameServer server = gameServerRepository.findById(serverId);
         return server != null && server.getGuildId() == guildId;
     }

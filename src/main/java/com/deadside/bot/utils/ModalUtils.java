@@ -2,6 +2,7 @@ package com.deadside.bot.utils;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
@@ -161,6 +162,25 @@ public class ModalUtils {
      */
     public static Modal createPremiumPurchaseModal(SlashCommandInteractionEvent event) {
         String modalId = "premium_purchase:" + event.getGuild().getId();
+        return createPremiumPurchaseModalInternal(modalId);
+    }
+    
+    /**
+     * Create a premium purchase modal from a button interaction
+     * @param event The button interaction event that triggered this modal
+     * @return The modal to show
+     */
+    public static Modal createPremiumPurchaseModal(ButtonInteractionEvent event) {
+        String modalId = "premium_purchase:" + event.getGuild().getId();
+        return createPremiumPurchaseModalInternal(modalId);
+    }
+    
+    /**
+     * Internal helper method to create premium purchase modal
+     * @param modalId The modal ID to use
+     * @return The configured modal
+     */
+    private static Modal createPremiumPurchaseModalInternal(String modalId) {
         
         // Create text inputs for premium purchase info
         TextInput durationInput = TextInput.create("duration", "Duration (days)", TextInputStyle.SHORT)

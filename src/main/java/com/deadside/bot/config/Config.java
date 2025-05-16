@@ -30,6 +30,7 @@ public class Config {
     private static final String ECONOMY_WORK_MIN_AMOUNT = "economy.work.min.amount";
     private static final String ECONOMY_WORK_MAX_AMOUNT = "economy.work.max.amount";
     private static final String ECONOMY_KILL_REWARD = "economy.kill.reward";
+    private static final String TIP4SERV_API_KEY = "tip4serv.api.key";
     
     // Default values for economy
     private static final long DEFAULT_DAILY_AMOUNT = 1000;
@@ -72,7 +73,7 @@ public class Config {
     /**
      * Get a property from environment variable first, then from properties file
      */
-    private String getProperty(String key, String defaultValue) {
+    public String getProperty(String key, String defaultValue) {
         // Environment variables use uppercase with underscores
         String envKey = key.toUpperCase().replace('.', '_');
         String value = System.getenv(envKey);
@@ -268,5 +269,25 @@ public class Config {
      */
     public java.util.List<Long> getAdminUserIds() {
         return ADMIN_IDS;
+    }
+    
+    /**
+     * Get the Tip4Serv API key
+     * @return The Tip4Serv API key
+     */
+    public String getTip4servApiKey() {
+        String key = getProperty(TIP4SERV_API_KEY, "");
+        if (key.isEmpty()) {
+            logger.warn("Tip4Serv API key not found in configuration");
+        }
+        return key;
+    }
+    
+    /**
+     * Get the daily amount (alias for getDailyRewardAmount)
+     * @return The daily reward amount
+     */
+    public long getDailyAmount() {
+        return getDailyRewardAmount();
     }
 }

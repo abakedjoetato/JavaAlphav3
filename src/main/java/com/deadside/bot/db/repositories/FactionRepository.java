@@ -148,6 +148,18 @@ public class FactionRepository {
     }
     
     /**
+     * Find all factions
+     */
+    public List<Faction> findAll() {
+        try {
+            return collection.find().into(new ArrayList<>());
+        } catch (Exception e) {
+            logger.error("Error finding all factions", e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
      * Find top factions by level in a guild
      */
     public List<Faction> findTopFactionsByLevel(long guildId, int limit) {

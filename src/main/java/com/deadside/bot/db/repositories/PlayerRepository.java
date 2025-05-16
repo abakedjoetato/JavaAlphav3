@@ -7,6 +7,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,6 +199,58 @@ public class PlayerRepository {
         } catch (Exception e) {
             logger.error("Error finding player by Discord ID: {}", discordId, e);
             return null;
+        }
+    }
+    
+    /**
+     * Find players by faction ID
+     */
+    public List<Player> findByFactionId(ObjectId factionId) {
+        try {
+            return collection.find(Filters.eq("factionId", factionId))
+                    .into(new ArrayList<>());
+        } catch (Exception e) {
+            logger.error("Error finding players by faction ID: {}", factionId, e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Count players by faction ID
+     */
+    public long countByFactionId(ObjectId factionId) {
+        try {
+            return collection.countDocuments(Filters.eq("factionId", factionId));
+        } catch (Exception e) {
+            logger.error("Error counting players by faction ID: {}", factionId, e);
+            return 0;
+        }
+    }
+    
+    /**
+     * Get top players by specific weapon
+     */
+    public List<Player> getTopPlayersByWeapon(String weaponName, int limit) {
+        try {
+            return collection.find(Filters.eq("mostUsedWeapon", weaponName))
+                    .sort(Sorts.descending("mostUsedWeaponKills"))
+                    .limit(limit)
+                    .into(new ArrayList<>());
+        } catch (Exception e) {
+            logger.error("Error finding top players by weapon: {}", weaponName, e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Count all players
+     */
+    public long countAll() {
+        try {
+            return collection.countDocuments();
+        } catch (Exception e) {
+            logger.error("Error counting all players", e);
+            return 0;
         }
     }
 }

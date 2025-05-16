@@ -4,6 +4,7 @@ import com.deadside.bot.db.models.Faction;
 import com.deadside.bot.db.models.Player;
 import com.deadside.bot.db.repositories.FactionRepository;
 import com.deadside.bot.db.repositories.PlayerRepository;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,9 +68,9 @@ public class FactionStatsSync {
     /**
      * Update statistics for a specific faction
      */
-    public void updateFaction(String factionId) {
-        if (factionId == null || factionId.isEmpty()) {
-            logger.warn("Cannot update faction with null or empty ID");
+    public void updateFaction(ObjectId factionId) {
+        if (factionId == null) {
+            logger.warn("Cannot update faction with null ID");
             return;
         }
         

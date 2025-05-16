@@ -173,4 +173,28 @@ public class EmbedUtils {
                 .setTimestamp(Instant.now())
                 .build();
     }
+    
+    /**
+     * Create a default embed with standard Deadside styling (returns a built MessageEmbed)
+     */
+    public static MessageEmbed createDefaultEmbed() {
+        return new EmbedBuilder()
+                .setTitle("Deadside Bot")
+                .setDescription("Deadside Discord Bot")
+                .setColor(DEADSIDE_PRIMARY)
+                .setFooter("Deadside Bot", "https://i.imgur.com/6vYRsJ8.png")
+                .setTimestamp(Instant.now())
+                .build();
+    }
+    
+    /**
+     * Create a default embed builder with standard Deadside styling
+     * @return EmbedBuilder that can be further customized
+     */
+    public static EmbedBuilder createDefaultEmbedBuilder() {
+        return new EmbedBuilder()
+                .setColor(DEADSIDE_PRIMARY)
+                .setFooter("Deadside Bot", "https://i.imgur.com/6vYRsJ8.png")
+                .setTimestamp(Instant.now());
+    }
 }

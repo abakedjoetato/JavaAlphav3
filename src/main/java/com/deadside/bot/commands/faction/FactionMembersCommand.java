@@ -149,7 +149,8 @@ public class FactionMembersCommand implements Command {
             return;
         }
 
-        EmbedBuilder embed = EmbedUtils.createDefaultEmbed()
+        // Create embed with faction members information
+        EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("⚔️ " + faction.getName() + " - Members (" + members.size() + ")")
                 .setColor(Color.BLUE)
                 .setTimestamp(Instant.now());

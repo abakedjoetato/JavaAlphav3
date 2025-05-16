@@ -100,7 +100,7 @@ public class FactionStatsCommand implements Command {
             return;
         }
         
-        EmbedBuilder embed = EmbedUtils.createDefaultEmbed()
+        EmbedBuilder embed = EmbedUtils.createDefaultEmbedBuilder()
                 .setTitle("⚔️ " + faction.getName() + " - Faction Stats")
                 .setColor(Color.BLUE)
                 .addField("Level", String.valueOf(faction.getLevel()), true)
@@ -158,9 +158,9 @@ public class FactionStatsCommand implements Command {
         }
         
         // Create the rankings embed
-        EmbedBuilder embed = EmbedUtils.createDefaultEmbed()
+        EmbedBuilder embed = EmbedUtils.createDefaultEmbedBuilder()
                 .setTitle("Faction Rankings - " + capitalizeFirstLetter(type))
-                .setColor(Color.GOLD);
+                .setColor(new Color(255, 215, 0)); // Gold color
         
         StringBuilder description = new StringBuilder();
         for (int i = 0; i < Math.min(10, factions.size()); i++) {

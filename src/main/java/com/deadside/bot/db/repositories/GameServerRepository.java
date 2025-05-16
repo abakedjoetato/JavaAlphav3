@@ -77,6 +77,19 @@ public class GameServerRepository {
     }
     
     /**
+     * Find a game server by guild ID
+     */
+    public GameServer findByGuildId(long guildId) {
+        try {
+            Bson filter = Filters.eq("guildId", guildId);
+            return collection.find(filter).first();
+        } catch (Exception e) {
+            logger.error("Error finding game server for guild ID: {}", guildId, e);
+            return null;
+        }
+    }
+    
+    /**
      * Find all game servers
      */
     public List<GameServer> findAll() {

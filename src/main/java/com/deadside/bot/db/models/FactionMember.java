@@ -91,8 +91,29 @@ public class FactionMember {
         return role == 2;  // Alias for isOwner for code readability
     }
     
+    public void setLeader(boolean isLeader) {
+        if (isLeader) {
+            this.role = 2;
+        } else if (this.role == 2) {
+            // If currently a leader, demote to officer
+            this.role = 1;
+        }
+    }
+    
     public boolean isOfficer() {
         return role == 1;
+    }
+    
+    public void setOfficer(boolean isOfficer) {
+        if (isOfficer) {
+            // Only set to officer if not already a leader
+            if (role != 2) {
+                this.role = 1;
+            }
+        } else if (role == 1) {
+            // If currently an officer, demote to member
+            this.role = 0;
+        }
     }
     
     public boolean isMember() {

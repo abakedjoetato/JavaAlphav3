@@ -60,8 +60,8 @@
 /home/runner/workspace/src/main/java/com/deadside/bot/DeadsideLogEventTester.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/admin/ServerCommand.java
 /home/runner/workspace/src/main/java/SimpleBotLoader.java
-/home/runner/workspace/src/main/java/com/deadside/bot/db/models/FactionMember.java
 /home/runner/workspace/src/main/java/com/deadside/bot/db/models/GameServer.java
+/home/runner/workspace/src/main/java/com/deadside/bot/db/models/FactionMember.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/player/LinkCommand.java
 /home/runner/workspace/src/main/java/com/deadside/bot/utils/ModalUtils.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/economy/RouletteCommand.java

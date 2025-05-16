@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.bson.types.ObjectId;
 
 /**
  * Listener for modal dialog interactions

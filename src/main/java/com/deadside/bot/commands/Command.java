@@ -22,7 +22,16 @@ public interface Command {
     /**
      * Get the options for the command
      */
-    List<OptionData> getOptions();
+    default List<OptionData> getOptions() {
+        return List.of();
+    }
+    
+    /**
+     * Get the subcommands for this command
+     */
+    default List<net.dv8tion.jda.api.interactions.commands.build.SubcommandData> getSubcommands() {
+        return List.of();
+    }
     
     /**
      * Execute the command

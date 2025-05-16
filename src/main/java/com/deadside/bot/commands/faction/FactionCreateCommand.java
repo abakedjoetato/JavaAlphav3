@@ -110,12 +110,12 @@ public class FactionCreateCommand implements Command {
 
             // Create the faction
             Faction faction = new Faction();
-            faction.setId(UUID.randomUUID().toString());
+            faction.setId(new org.bson.types.ObjectId());
             faction.setName(factionName);
             faction.setDescription(description.isEmpty() ? null : description);
             faction.setLogoUrl(logoUrl.isEmpty() ? null : logoUrl);
             faction.setTag(tag.isEmpty() ? null : tag);
-            faction.setCreatedAt(Instant.now());
+            faction.setCreatedAt(System.currentTimeMillis());
             faction.setLevel(1);
             faction.setExperience(0);
             faction.setExperienceNextLevel(1000); // Initial XP needed for level 2
@@ -135,15 +135,12 @@ public class FactionCreateCommand implements Command {
             playerRepository.save(player);
             
             // Send success message
+            String successMessage = "Congratulations! You have successfully created the faction " + faction.getName() + 
+                                    "\nYou are now its leader. Use /faction commands to manage your faction.";
+                                    
             event.replyEmbeds(
-                EmbedUtils.createDefaultEmbed()
-                    .setTitle("⚔️ Faction Created: " + faction.getName())
-                    .setDescription("Congratulations! You have successfully created a new faction and are now its leader.")
-                    .addField("Description", description.isEmpty() ? "None" : description, false)
-                    .addField("Tag", tag.isEmpty() ? "None" : tag, true)
-                    .setColor(Color.GREEN)
-                    .setFooter("Use /faction commands to manage your faction")
-                    .build()
+                EmbedUtils.factionEmbed("Faction Created: " + faction.getName(),
+                    successMessage, Color.GREEN)
             ).queue();
             
             logger.info("User {} created faction {}", user.getId(), factionName);

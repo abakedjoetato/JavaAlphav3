@@ -54,12 +54,15 @@ public class Faction {
     
     // Getters and Setters
     
-    // Additional Setters for FactionCreateCommand
+    // Additional Properties for FactionCreateCommand
     private String logoUrl;
     private long createdAt;
     private int experienceNextLevel;
     private ObjectId creatorId;
     private int territoryControl;
+    private int totalKills;
+    private int totalDeaths;
+    private int memberCount;
     
     public String getLogoUrl() {
         return logoUrl;
@@ -74,8 +77,8 @@ public class Faction {
         return createdAt;
     }
     
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt.toEpochMilli();
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
         this.updated = System.currentTimeMillis();
     }
     
@@ -104,6 +107,49 @@ public class Faction {
     public void setTerritoryControl(int territoryControl) {
         this.territoryControl = territoryControl;
         this.updated = System.currentTimeMillis();
+    }
+    
+    public int getTotalKills() {
+        return totalKills;
+    }
+    
+    public void setTotalKills(int totalKills) {
+        this.totalKills = totalKills;
+        this.updated = System.currentTimeMillis();
+    }
+    
+    public int getTotalDeaths() {
+        return totalDeaths;
+    }
+    
+    public void setTotalDeaths(int totalDeaths) {
+        this.totalDeaths = totalDeaths;
+        this.updated = System.currentTimeMillis();
+    }
+    
+    /**
+     * Get member count
+     */
+    public int getMemberCount() {
+        return memberCount;
+    }
+    
+    /**
+     * Set member count
+     */
+    public void setMemberCount(int memberCount) {
+        this.memberCount = memberCount;
+        this.updated = System.currentTimeMillis();
+    }
+    
+    /**
+     * Get the faction K/D ratio
+     */
+    public double getKdRatio() {
+        if (totalDeaths == 0) {
+            return totalKills;
+        }
+        return (double) totalKills / totalDeaths;
     }
     
     public ObjectId getId() {

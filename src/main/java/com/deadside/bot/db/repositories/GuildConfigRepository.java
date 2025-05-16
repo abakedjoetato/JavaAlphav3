@@ -124,7 +124,7 @@ public class GuildConfigRepository {
         guildConfig.setId(doc.getObjectId("_id"));
         guildConfig.setGuildId(doc.getLong("guildId"));
         guildConfig.setPremium(doc.getBoolean("premium", false));
-        guildConfig.setPremiumUntil(doc.getLong("premiumUntil", 0));
+        guildConfig.setPremiumUntil(doc.containsKey("premiumUntil") ? doc.getLong("premiumUntil") : 0);
         
         if (doc.containsKey("killfeedChannelId")) {
             guildConfig.setKillfeedChannelId(doc.getString("killfeedChannelId"));
@@ -138,8 +138,8 @@ public class GuildConfigRepository {
             guildConfig.setLogChannelId(doc.getString("logChannelId"));
         }
         
-        guildConfig.setCreatedAt(doc.getLong("createdAt", System.currentTimeMillis()));
-        guildConfig.setUpdatedAt(doc.getLong("updatedAt", System.currentTimeMillis()));
+        guildConfig.setCreatedAt(doc.containsKey("createdAt") ? doc.getLong("createdAt") : System.currentTimeMillis());
+        guildConfig.setUpdatedAt(doc.containsKey("updatedAt") ? doc.getLong("updatedAt") : System.currentTimeMillis());
         
         // Convert settings
         Map<String, String> settings = new HashMap<>();

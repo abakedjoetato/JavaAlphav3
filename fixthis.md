@@ -1,94 +1,126 @@
-# Comprehensive Plan to Fix and Run the Deadside Discord Bot
+# Comprehensive Fix Plan for Deadside Discord Bot
 
-## Critical Issues to Fix
+## Current Issues Overview
+1. **Compilation errors** - Multiple files have type mismatch issues, missing methods, incompatible interfaces
+2. **Model incompatibilities** - Several models have mismatched types (ObjectId vs String vs long)
+3. **Missing methods** - Missing interface implementations and utility methods
+4. **Inconsistent ID handling** - Different ID types used across repositories (String, ObjectId, long)
 
-### 1. Environment Setup
-- Set required environment variables:
-  - DISCORD_TOKEN for bot authentication
-  - MONGODB_URI for database connectivity
-  - Optional: TIP4SERV_WEBHOOK_SECRET for premium features
+## Fix Strategy
 
-### 2. Database Setup
-- Initialize and ensure MongoDB is running
-- Create necessary collections if they don't exist
-- Set up proper indexes for performance
+### Phase 1: Fix Data Model and Repository Issues
+- [ ] Review and update all model classes for proper typing (Player, Faction, GameServer, etc.)
+- [ ] Ensure repository methods use consistent parameter types
+- [ ] Implement missing methods in model classes
+- [ ] Add required fields to model classes
 
-### 3. Dependency Management
-- Verify all dependencies are correctly resolved in pom.xml
-- Ensure compatibility between different libraries
+### Phase 2: Fix Command and Listener Issues
+- [ ] Create and implement missing interfaces
+- [ ] Fix parameter type mismatches in method calls
+- [ ] Implement missing functionality in command handlers
+- [ ] Add missing utility methods to support commands
 
-### 4. Build Process
-- Fix any compilation errors in Java classes
-- Ensure proper Maven configuration
+### Phase 3: Fix Integration Points
+- [ ] Ensure proper Discord event handling
+- [ ] Fix configuration loading
+- [ ] Repair premium system integration
+- [ ] Validate MongoDB connections and queries
 
-### 5. SFTP Integration
-- Set up test SFTP server credentials for development
-- Implement fallback for missing SFTP servers
+### Phase 4: Fix Core Functions
+- [ ] Update parsers for server logs
+- [ ] Fix stat tracking
+- [ ] Fix faction management
+- [ ] Repair economy system
 
-### 6. Command Registration
-- Fix command registration with Discord API
-- Ensure all slash commands are properly registered
+### Phase 5: Validation and Testing
+- [ ] Run compilation tests
+- [ ] Test basic bot functionality
+- [ ] Verify Discord command integration
+- [ ] Check SFTP log parsing
 
-### 7. Parser Logic
-- Test and fix CSV parser functionality
-- Ensure log parser can handle various log formats
+## Detailed Issues and Fixes
 
-### 8. Premium System
-- Configure Tip4serv webhook handler
-- Implement premium feature gates correctly
+### Data Model Issues
 
-## Implementation Steps
+1. **Player Model**:
+   - Add missing setters for faction leader/officer status
+   - Ensure proper handling of ObjectId for faction references
+   - Fix inconsistent player ID type usage
 
-### Step 1: Environment Configuration
-1. Create necessary environment variables
-2. Update config loading code to handle missing values gracefully
+2. **Faction Model**:
+   - Add missing fields (logoUrl, createdAt, experienceNextLevel, etc.)
+   - Fix ObjectId handling for member references
+   - Add kill/death tracking fields and methods
 
-### Step 2: MongoDB Integration
-1. Set up local MongoDB for development
-2. Initialize database with required collections
-3. Test database connectivity
+3. **LinkedPlayer Model**:
+   - Add methods to handle ObjectId linking
+   - Fix references to player IDs
 
-### Step 3: Fix Build Process
-1. Resolve any Maven dependencies
-2. Fix compilation errors
-3. Create a clean build
+4. **GameServer Model**:
+   - Add missing utility methods
+   - Implement proper server status tracking
 
-### Step 4: Core Bot Logic
-1. Ensure JDA initialization works correctly
-2. Fix event listeners 
-3. Test bot connectivity to Discord
+### Repository Issues
 
-### Step 5: Command System
-1. Fix command registration
-2. Implement all required commands
-3. Test command execution
+1. **PlayerRepository**:
+   - Fix findByNameExact to return List<Player>
+   - Update methods to handle ObjectId correctly
 
-### Step 6: SFTP & Parsing Logic
-1. Implement robust SFTP connector
-2. Fix CSV and log parsers
-3. Test with sample data
+2. **FactionRepository**:
+   - Add missing findByTag method
+   - Fix type handling for ID parameters
 
-### Step 7: Premium & Economy System
-1. Implement premium feature gates
-2. Fix economy command functionality
-3. Set up webhook handling
+3. **LinkedPlayerRepository**:
+   - Add method to find by ObjectId
 
-### Step 8: Faction & Player Systems
-1. Fix faction creation and management
-2. Implement player linking functionality
-3. Test leaderboards and statistics
+4. **GameServerRepository**:
+   - Fix findById to use String consistently
 
-### Step 9: Final Testing
-1. Test all features in a development environment
-2. Fix any remaining bugs
-3. Ensure error handling is robust
+### Command Issues
 
-## Implementation Priority
-1. Core bot connectivity (Discord token, JDA)
-2. Database connectivity
-3. Command system
-4. Parsers and data processing
-5. Premium features
-6. Economy system
-7. Faction system
-8. UI polish
+1. **FactionCreateCommand**:
+   - Implement missing Command interface methods
+   - Fix type conversion for ObjectIds
+   - Add missing faction property initialization
+
+2. **FactionMembersCommand**:
+   - Fix player references and updates
+   - Add missing status setters
+
+3. **SlashCommandHandler**:
+   - Fix consistency of command execution
+
+### Listener Issues
+
+1. **ModalListener**:
+   - Fix type mismatches in ID handling
+   - Update method calls to use correct types
+
+2. **StringSelectMenuListener**:
+   - Fix ObjectId handling
+   - Update interface references
+
+3. **ButtonListener**:
+   - Fix event type mismatch
+
+### Utility Issues
+
+1. **EmbedUtils**:
+   - Add missing createDefaultEmbed method
+   - Fix type conversions in embed creation
+
+## Implementation Sequence
+
+1. Start by fixing model classes and adding missing methods
+2. Then fix repositories to ensure consistent type handling
+3. Update command interfaces and implementations
+4. Fix event listeners and handlers
+5. Update utility classes to support fixes
+6. Test and validate each component incrementally
+
+## Compatibility Considerations
+
+- Ensure backward compatibility with existing data
+- Maintain interface consistency
+- Keep MongoDB serialization working properly
+- Preserve Discord API compatibility
