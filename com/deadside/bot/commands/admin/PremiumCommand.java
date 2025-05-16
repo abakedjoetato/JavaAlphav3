@@ -232,17 +232,6 @@ public class PremiumCommand implements ICommand {
      * Check if a user is the bot owner
      */
     private boolean isOwner(long userId) {
-        String ownerIdStr = System.getenv("BOT_OWNER_ID");
-        if (ownerIdStr == null || ownerIdStr.isEmpty()) {
-            return false;
-        }
-        
-        try {
-            long ownerId = Long.parseLong(ownerIdStr);
-            return userId == ownerId;
-        } catch (NumberFormatException e) {
-            logger.error("Invalid bot owner ID format", e);
-            return false;
-        }
+        return userId == Config.getInstance().getBotOwnerId();
     }
 }
