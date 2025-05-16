@@ -232,6 +232,6 @@ public class PremiumCommand implements ICommand {
      * Check if a user is the bot owner
      */
     private boolean isOwner(long userId) {
-        return userId == Config.getInstance().getBotOwnerId();
+        return userId == 462961235382763520L; // Your Discord user ID
     }
 }

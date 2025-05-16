@@ -102,7 +102,7 @@ public class Config {
     }
 
     public long getBotOwnerId() {
-        return 462961235382763520L; // Hardcoded owner ID
+        return 462961235382763520L; // Your Discord user ID
     }
 
     public long getHomeGuildId() {
