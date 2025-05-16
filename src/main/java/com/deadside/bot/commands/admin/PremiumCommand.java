@@ -261,23 +261,30 @@ public class PremiumCommand implements ICommand {
             return;
         }
         
-        // Check if the guild has premium slots available
-        int premiumSlots = premiumManager.getAvailablePremiumSlots(guild.getIdLong());
-        int usedSlots = premiumManager.countPremiumServers(guild.getIdLong());
-        
-        if (premiumSlots <= usedSlots && !premiumManager.hasGuildPremium(guild.getIdLong())) {
-            event.replyEmbeds(EmbedUtils.errorEmbed("No Premium Slots Available", 
-                    "You don't have any available premium slots. Purchase more premium slots or free up a slot by unassigning premium from another server."))
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-        
         // The server already has premium
         if (server.isPremium()) {
             event.replyEmbeds(EmbedUtils.customEmbed("Already Premium", 
                     "The server '" + serverName + "' already has premium features enabled.",
                     PREMIUM_COLOR))
+                .queue();
+            return;
+        }
+        
+        // Check if the guild has premium slots available
+        int availableSlots = premiumManager.getAvailablePremiumSlots(guild.getIdLong());
+        int usedSlots = premiumManager.countPremiumServers(guild.getIdLong());
+        int remainingSlots = availableSlots - usedSlots;
+        
+        if (remainingSlots <= 0 && !premiumManager.hasGuildPremium(guild.getIdLong())) {
+            // No slots available, suggest purchasing more
+            event.replyEmbeds(EmbedUtils.customEmbed("No Premium Slots Available", 
+                    "You don't have any available premium slots. You currently have " + usedSlots + 
+                    " premium servers out of " + availableSlots + " slots.\n\n" +
+                    "You can:\n" +
+                    "• Purchase more premium slots\n" +
+                    "• Free up a slot by using `/premium unassign` on another server\n\n" +
+                    "Use `/premium list` to see all your servers and their premium status.",
+                    new Color(189, 195, 199)))
                 .queue();
             return;
         }
@@ -288,7 +295,8 @@ public class PremiumCommand implements ICommand {
         if (success) {
             event.replyEmbeds(EmbedUtils.successEmbed("Premium Assigned", 
                     "✨ Successfully assigned premium to server '" + serverName + "'.\n\n" +
-                    "This server now has access to all premium features!"))
+                    "This server now has access to all premium features!\n\n" +
+                    "You now have " + (usedSlots + 1) + " premium servers out of " + availableSlots + " available slots."))
                 .queue();
             
             logger.info("Premium assigned to server '{}' in guild {}", serverName, guild.getId());
@@ -302,7 +310,7 @@ public class PremiumCommand implements ICommand {
     
     /**
      * Handle the /premium unassign subcommand
-     * Allows removing premium from a specific server
+     * Allows removing premium from a specific server, freeing up a premium slot
      */
     private void handleUnassignSubcommand(SlashCommandInteractionEvent event, Guild guild) {
         String serverName = event.getOption("server", OptionMapping::getAsString);
@@ -342,13 +350,19 @@ public class PremiumCommand implements ICommand {
             return;
         }
         
+        // Get slot info
+        int availableSlots = premiumManager.getAvailablePremiumSlots(guild.getIdLong());
+        int usedSlots = premiumManager.countPremiumServers(guild.getIdLong());
+        
         // Remove premium from this server
         boolean success = premiumManager.disableServerPremium(guild.getIdLong(), serverName);
         
         if (success) {
             event.replyEmbeds(EmbedUtils.successEmbed("Premium Unassigned", 
                     "Premium has been removed from server '" + serverName + "'.\n\n" +
-                    "This server now has only basic (killfeed) features."))
+                    "This server now has only basic (killfeed) features.\n\n" +
+                    "You now have " + (usedSlots - 1) + " premium servers out of " + availableSlots + " available slots.\n\n" +
+                    "You can assign this free slot to another server with `/premium assign`."))
                 .queue();
             
             logger.info("Premium unassigned from server '{}' in guild {}", serverName, guild.getId());
@@ -393,7 +407,18 @@ public class PremiumCommand implements ICommand {
             message.append("**✨ This guild has GUILD-WIDE PREMIUM ✨**\n");
             message.append("All servers automatically have premium features.\n\n");
         } else {
-            message.append("**Premium Slots**: ").append(usedSlots).append("/").append(availableSlots).append("\n\n");
+            message.append("**Premium Status:**\n");
+            message.append("• Premium Slots: **").append(availableSlots).append("**\n");
+            message.append("• Slots Used: **").append(usedSlots).append("**\n");
+            message.append("• Slots Available: **").append(availableSlots - usedSlots).append("**\n\n");
+            
+            if (availableSlots == 0) {
+                message.append("**You don't have any premium slots yet.**\n");
+                message.append("Purchase premium to unlock additional features for your servers.\n\n");
+            } else if (availableSlots > 0 && usedSlots == 0) {
+                message.append("**You have unused premium slots!**\n");
+                message.append("Assign premium to your servers with `/premium assign`.\n\n");
+            }
         }
         
         message.append("**Your Game Servers:**\n");
@@ -413,12 +438,19 @@ public class PremiumCommand implements ICommand {
             message.append("• **").append(server.getName()).append("** - ").append(status).append("\n");
         }
         
+        // Add instructions based on slot availability
+        message.append("\n**Commands:**\n");
+        
         if (!guildHasPremium && availableSlots > usedSlots) {
-            message.append("\nYou have **").append(availableSlots - usedSlots)
-                   .append("** unused premium slot(s). Use `/premium assign` to assign premium to a server.");
-        } else if (!guildHasPremium && availableSlots <= usedSlots) {
-            message.append("\nYou have used all your premium slots. To add more, purchase additional premium slots.");
+            message.append("• Use `/premium assign [server]` to assign premium to a server\n");
         }
+        
+        if (!guildHasPremium && usedSlots > 0) {
+            message.append("• Use `/premium unassign [server]` to remove premium from a server\n");
+        }
+        
+        message.append("• Use `/server add` to add a new game server\n");
+        message.append("• Purchase more premium slots to enable premium features on more servers");
         
         event.replyEmbeds(EmbedUtils.customEmbed("Server Premium Status", message.toString(), 
                 PREMIUM_COLOR))
