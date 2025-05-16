@@ -61,8 +61,8 @@ com/deadside/bot/listeners/ModalListener.class
 com/deadside/bot/commands/CommandManager.class
 com/deadside/bot/faction/FactionStatsSync.class
 com/deadside/bot/listeners/ButtonListener.class
-com/deadside/bot/commands/ICommand.class
 com/deadside/bot/commands/faction/FactionCreateCommand.class
+com/deadside/bot/commands/ICommand.class
 com/deadside/bot/TestRunner.class
 com/deadside/bot/premium/Tip4servWebhookController.class
 com/deadside/bot/db/repositories/FactionRepository.class

@@ -16,6 +16,10 @@ author = "agent"
 task = "workflow.run"
 args = "build-bot"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "run-bot"
+
 [[workflows.workflow]]
 name = "build-bot"
 author = "agent"
@@ -23,6 +27,14 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd . && mvn package -DskipTests"
+
+[[workflows.workflow]]
+name = "run-bot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd . && java -jar target/deadside-discord-bot-1.0-SNAPSHOT.jar"
 
 [deployment]
 run = ["sh", "-c", "cd . && mvn package -DskipTests"]

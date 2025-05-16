@@ -21,10 +21,26 @@ public class GameServerRepository {
     private static final Logger logger = LoggerFactory.getLogger(GameServerRepository.class);
     private static final String COLLECTION_NAME = "game_servers";
     
-    private final MongoCollection<GameServer> collection;
+    private MongoCollection<GameServer> collection;
     
     public GameServerRepository() {
-        this.collection = MongoDBConnection.getInstance().getDatabase().getCollection(COLLECTION_NAME, GameServer.class);
+        try {
+            this.collection = MongoDBConnection.getInstance().getDatabase().getCollection(COLLECTION_NAME, GameServer.class);
+        } catch (IllegalStateException e) {
+            // This can happen during early initialization - handle gracefully
+            logger.warn("MongoDB connection not initialized yet. Usage will be deferred until initialization.");
+        }
+    }
+    
+    /**
+     * Get the MongoDB collection, initializing if needed
+     */
+    private MongoCollection<GameServer> getCollection() {
+        if (collection == null) {
+            // Try to get the collection now that MongoDB should be initialized
+            this.collection = MongoDBConnection.getInstance().getDatabase().getCollection(COLLECTION_NAME, GameServer.class);
+        }
+        return collection;
     }
     
     /**
@@ -33,7 +49,7 @@ public class GameServerRepository {
     public GameServer findById(String id) {
         try {
             Bson filter = Filters.eq("_id", id);
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding game server with ID: {}", id, e);
             return null;
@@ -49,7 +65,7 @@ public class GameServerRepository {
                     Filters.eq("guildId", guildId),
                     Filters.eq("name", name)
             );
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding game server for guild ID: {} and name: {}", guildId, name, e);
             return null;
@@ -62,7 +78,7 @@ public class GameServerRepository {
     public List<GameServer> findAllByGuildId(long guildId) {
         try {
             Bson filter = Filters.eq("guildId", guildId);
-            FindIterable<GameServer> results = collection.find(filter);
+            FindIterable<GameServer> results = getCollection().find(filter);
             
             List<GameServer> servers = new ArrayList<>();
             for (GameServer server : results) {
@@ -82,7 +98,7 @@ public class GameServerRepository {
     public GameServer findByGuildId(long guildId) {
         try {
             Bson filter = Filters.eq("guildId", guildId);
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding game server for guild ID: {}", guildId, e);
             return null;
@@ -94,7 +110,7 @@ public class GameServerRepository {
      */
     public List<GameServer> findAll() {
         try {
-            FindIterable<GameServer> results = collection.find();
+            FindIterable<GameServer> results = getCollection().find();
             
             List<GameServer> servers = new ArrayList<>();
             for (GameServer server : results) {
@@ -124,7 +140,7 @@ public class GameServerRepository {
             }
             
             ReplaceOptions options = new ReplaceOptions().upsert(true);
-            collection.replaceOne(filter, gameServer, options);
+            getCollection().replaceOne(filter, gameServer, options);
         } catch (Exception e) {
             logger.error("Error saving game server: {}", gameServer.getName(), e);
         }
@@ -145,7 +161,7 @@ public class GameServerRepository {
                 );
             }
             
-            DeleteResult result = collection.deleteOne(filter);
+            DeleteResult result = getCollection().deleteOne(filter);
             logger.debug("Deleted {} game server(s)", result.getDeletedCount());
         } catch (Exception e) {
             logger.error("Error deleting game server: {}", gameServer.getName(), e);
