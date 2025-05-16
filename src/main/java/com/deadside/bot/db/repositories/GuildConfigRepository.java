@@ -103,7 +103,7 @@ public class GuildConfigRepository {
      * @param value The setting value
      */
     public void updateSetting(long guildId, String key, String value) {
-        collection.updateOne(
+        getCollection().updateOne(
                 Filters.eq("guildId", guildId),
                 Updates.set("settings." + key, value)
         );

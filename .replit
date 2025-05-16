@@ -34,7 +34,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd . && java -jar target/deadside-discord-bot-1.0-SNAPSHOT.jar"
+args = "cd . && mvn exec:java -Dexec.mainClass=\"com.deadside.bot.Main\""
 
 [deployment]
 run = ["sh", "-c", "cd . && mvn package -DskipTests"]

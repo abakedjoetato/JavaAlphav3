@@ -1,12 +1,19 @@
 # Comprehensive Fix Plan for Deadside Discord Bot
 
 ## Current Issues Overview
-1. **Compilation errors** - Multiple files have type mismatch issues, missing methods, incompatible interfaces
-2. **Model incompatibilities** - Several models have mismatched types (ObjectId vs String vs long)
-3. **Missing methods** - Missing interface implementations and utility methods
-4. **Inconsistent ID handling** - Different ID types used across repositories (String, ObjectId, long)
+1. **Replit Execution** - Bot fails to start using the Replit run button (`bash: java: command not found`)
+2. **MongoDB Connection** - Timeout issues with database operations like `/server list`
+3. **Compilation errors** - Multiple files have type mismatch issues, missing methods, incompatible interfaces
+4. **Model incompatibilities** - Several models have mismatched types (ObjectId vs String vs long)
+5. **Missing methods** - Missing interface implementations and utility methods
+6. **Inconsistent ID handling** - Different ID types used across repositories (String, ObjectId, long)
 
 ## Fix Strategy
+
+### Phase 0: Fix Replit Execution and Database Connection Issues
+- [ ] Fix Java execution in Replit environment (update .replit configuration)
+- [ ] Implement proper MongoDB connection initialization across all repositories
+- [ ] Apply getCollection() pattern to all database operations for connection resilience
 
 ### Phase 1: Fix Data Model and Repository Issues
 - [ ] Review and update all model classes for proper typing (Player, Faction, GameServer, etc.)

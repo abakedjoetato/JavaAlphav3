@@ -120,7 +120,7 @@ public class FactionRepository {
      */
     public List<Faction> findByOwner(long ownerId) {
         try {
-            return collection.find(Filters.eq("ownerId", ownerId))
+            return getCollection().find(Filters.eq("ownerId", ownerId))
                     .into(new ArrayList<>());
         } catch (Exception e) {
             logger.error("Error finding factions by owner: {}", ownerId, e);
@@ -138,7 +138,7 @@ public class FactionRepository {
                     Filters.in("officerIds", memberId),
                     Filters.in("memberIds", memberId)
             );
-            return collection.find(filter).into(new ArrayList<>());
+            return getCollection().find(filter).into(new ArrayList<>());
         } catch (Exception e) {
             logger.error("Error finding factions by member: {}", memberId, e);
             return new ArrayList<>();
@@ -150,7 +150,7 @@ public class FactionRepository {
      */
     public List<Faction> findByGuild(long guildId) {
         try {
-            return collection.find(Filters.eq("guildId", guildId))
+            return getCollection().find(Filters.eq("guildId", guildId))
                     .sort(Sorts.descending("level", "experience"))
                     .into(new ArrayList<>());
         } catch (Exception e) {
@@ -171,7 +171,7 @@ public class FactionRepository {
      */
     public List<Faction> findAll() {
         try {
-            return collection.find().into(new ArrayList<>());
+            return getCollection().find().into(new ArrayList<>());
         } catch (Exception e) {
             logger.error("Error finding all factions", e);
             return new ArrayList<>();
@@ -183,7 +183,7 @@ public class FactionRepository {
      */
     public List<Faction> findTopFactionsByLevel(long guildId, int limit) {
         try {
-            return collection.find(Filters.eq("guildId", guildId))
+            return getCollection().find(Filters.eq("guildId", guildId))
                     .sort(Sorts.descending("level", "experience"))
                     .limit(limit)
                     .into(new ArrayList<>());
@@ -200,7 +200,7 @@ public class FactionRepository {
         try {
             // This is a bit tricky because we need to calculate total members
             // MongoDB aggregation would be more efficient, but for simplicity we'll fetch all and sort in-memory
-            List<Faction> factions = collection.find(Filters.eq("guildId", guildId))
+            List<Faction> factions = getCollection().find(Filters.eq("guildId", guildId))
                     .into(new ArrayList<>());
             
             return factions.stream()
@@ -219,11 +219,11 @@ public class FactionRepository {
     public void save(Faction faction) {
         try {
             if (faction.getId() == null) {
-                collection.insertOne(faction);
+                getCollection().insertOne(faction);
                 logger.debug("Inserted new faction: {}", faction.getName());
             } else {
                 Bson filter = Filters.eq("_id", faction.getId());
-                collection.replaceOne(filter, faction);
+                getCollection().replaceOne(filter, faction);
                 logger.debug("Updated faction: {}", faction.getName());
             }
         } catch (Exception e) {
@@ -238,7 +238,7 @@ public class FactionRepository {
         try {
             if (faction.getId() != null) {
                 Bson filter = Filters.eq("_id", faction.getId());
-                collection.deleteOne(filter);
+                getCollection().deleteOne(filter);
                 logger.debug("Deleted faction: {}", faction.getName());
                 return true;
             }
