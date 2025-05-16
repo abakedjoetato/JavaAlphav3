@@ -5,7 +5,7 @@ channel = "stable-24_05"
 packages = ["unzip", "mongodb", "maven"]
 
 [workflows]
-runButton = "Project"
+runButton = "Build and Run Bot"
 
 [[workflows.workflow]]
 name = "Project"
@@ -35,6 +35,19 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd . && mvn exec:java -Dexec.mainClass=\"com.deadside.bot.Main\" -Dexec.cleanupDaemonThreads=false"
+
+[[workflows.workflow]]
+name = "Build and Run Bot"
+author = 42764451
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn package -DskipTests"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn exec:java -Dexec.mainClass=\"com.deadside.bot.Main\" -Dexec.cleanupDaemonThreads=false"
 
 [deployment]
 run = ["sh", "-c", "cd . && mvn package -DskipTests"]
