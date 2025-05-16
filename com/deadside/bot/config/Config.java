@@ -101,8 +101,10 @@ public class Config {
         return getProperty(MONGO_DATABASE, "deadsidebot");
     }
 
+    public static final long BOT_OWNER_ID = 462961235382763520L;
+
     public long getBotOwnerId() {
-        return 462961235382763520L; // Your Discord user ID
+        return BOT_OWNER_ID;
     }
 
     public long getHomeGuildId() {
