@@ -53,6 +53,7 @@
 /home/runner/workspace/src/main/java/com/deadside/bot/db/repositories/LinkedPlayerRepository.java
 /home/runner/workspace/src/main/java/com/deadside/bot/premium/FeatureGate.java
 /home/runner/workspace/src/main/java/com/deadside/bot/utils/LogParserTester.java
+/home/runner/workspace/src/main/java/com/deadside/bot/utils/HttpUtils.java
 /home/runner/workspace/src/main/java/com/deadside/bot/db/models/Currency.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/stats/LeaderboardCommand.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/economy/BlackjackCommand.java

@@ -20,13 +20,29 @@ import java.util.Map;
  */
 public class GuildConfigRepository {
     private static final Logger logger = LoggerFactory.getLogger(GuildConfigRepository.class);
-    private final MongoCollection<Document> collection;
+    private MongoCollection<Document> collection;
     
     /**
      * Constructor
      */
     public GuildConfigRepository() {
-        this.collection = MongoDBConnection.getDatabase().getCollection("guild_configs");
+        try {
+            this.collection = MongoDBConnection.getInstance().getDatabase().getCollection("guild_configs");
+        } catch (IllegalStateException e) {
+            // This can happen during early initialization - handle gracefully
+            logger.warn("MongoDB connection not initialized yet. Using will be deferred until initialization.");
+        }
+    }
+    
+    /**
+     * Get the MongoDB collection, initializing if needed
+     */
+    private MongoCollection<Document> getCollection() {
+        if (collection == null) {
+            // Try to get the collection now that MongoDB should be initialized
+            this.collection = MongoDBConnection.getInstance().getDatabase().getCollection("guild_configs");
+        }
+        return collection;
     }
     
     /**
@@ -35,7 +51,7 @@ public class GuildConfigRepository {
      * @return The GuildConfig or null if not found
      */
     public GuildConfig findById(ObjectId id) {
-        Document doc = collection.find(Filters.eq("_id", id)).first();
+        Document doc = getCollection().find(Filters.eq("_id", id)).first();
         return doc != null ? documentToGuildConfig(doc) : null;
     }
     
@@ -45,7 +61,7 @@ public class GuildConfigRepository {
      * @return The GuildConfig or null if not found
      */
     public GuildConfig findByGuildId(long guildId) {
-        Document doc = collection.find(Filters.eq("guildId", guildId)).first();
+        Document doc = getCollection().find(Filters.eq("guildId", guildId)).first();
         return doc != null ? documentToGuildConfig(doc) : null;
     }
     
@@ -55,7 +71,7 @@ public class GuildConfigRepository {
      */
     public List<GuildConfig> findAllPremium() {
         List<GuildConfig> result = new ArrayList<>();
-        collection.find(Filters.eq("premium", true)).forEach(doc -> result.add(documentToGuildConfig(doc)));
+        getCollection().find(Filters.eq("premium", true)).forEach(doc -> result.add(documentToGuildConfig(doc)));
         return result;
     }
     
@@ -71,7 +87,7 @@ public class GuildConfigRepository {
             doc.put("_id", guildConfig.getId());
         }
         
-        collection.replaceOne(
+        getCollection().replaceOne(
                 Filters.eq("_id", guildConfig.getId()),
                 doc,
                 MongoDBConnection.UPSERT_OPTION
@@ -100,7 +116,7 @@ public class GuildConfigRepository {
      * @param guildConfig The guild config to delete
      */
     public void delete(GuildConfig guildConfig) {
-        collection.deleteOne(Filters.eq("_id", guildConfig.getId()));
+        getCollection().deleteOne(Filters.eq("_id", guildConfig.getId()));
         logger.debug("Deleted guild config: {}", guildConfig.getId());
     }
     
@@ -109,7 +125,7 @@ public class GuildConfigRepository {
      * @param guildId The Discord guild ID
      */
     public void deleteByGuildId(long guildId) {
-        collection.deleteOne(Filters.eq("guildId", guildId));
+        getCollection().deleteOne(Filters.eq("guildId", guildId));
         logger.debug("Deleted guild config for guild: {}", guildId);
     }
     

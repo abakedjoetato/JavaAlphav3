@@ -9,6 +9,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.mongodb.client.model.ReplaceOptions;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
@@ -22,6 +23,9 @@ public class MongoDBConnection {
     private static MongoDBConnection instance;
     private MongoDatabase database;
     private MongoClient mongoClient;
+    
+    // Common MongoDB options
+    public static final ReplaceOptions UPSERT_OPTION = new ReplaceOptions().upsert(true);
 
     private MongoDBConnection() {
         // Private constructor for singleton

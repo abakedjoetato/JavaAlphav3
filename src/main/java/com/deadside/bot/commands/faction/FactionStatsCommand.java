@@ -111,7 +111,7 @@ public class FactionStatsCommand implements Command {
                 .addField("Total Deaths", String.valueOf(faction.getTotalDeaths()), true)
                 .addField("K/D Ratio", String.format("%.2f", faction.getKdRatio()), true)
                 .addField("Territory Control", String.valueOf(faction.getTerritoryControl()) + "%", true)
-                .addField("Faction Founded", faction.getCreatedAt().toString(), false);
+                .addField("Faction Founded", new java.util.Date(faction.getCreatedAt()).toString(), false);
                 
         if (faction.getDescription() != null && !faction.getDescription().isEmpty()) {
             embed.setDescription(faction.getDescription());

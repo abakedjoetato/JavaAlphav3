@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -41,7 +40,7 @@ public class ModalListener extends ListenerAdapter {
     private static final Pattern PORT_PATTERN = Pattern.compile("^\\d{1,5}$");
     
     @Override
-    public void onModalInteraction(@Nonnull ModalInteractionEvent event) {
+    public void onModalInteraction(ModalInteractionEvent event) {
         String modalId = event.getModalId();
         
         try {
@@ -350,7 +349,7 @@ public class ModalListener extends ListenerAdapter {
             }
             
             // Add alt account
-            if (userLinkedPlayer.getAltPlayerIds().contains(playerId)) {
+            if (userLinkedPlayer.getAltPlayerIds().contains(playerId.toString())) {
                 event.getHook().sendMessageEmbeds(
                         EmbedUtils.errorEmbed("Already Linked", 
                                 "The player **" + playerName + "** is already linked as one of your alt accounts.")
@@ -358,7 +357,7 @@ public class ModalListener extends ListenerAdapter {
                 return;
             }
             
-            userLinkedPlayer.addAltPlayerId(playerId);
+            userLinkedPlayer.addAltPlayerId(playerId.toString());
             linkedPlayerRepository.save(userLinkedPlayer);
             
             event.getHook().sendMessageEmbeds(
