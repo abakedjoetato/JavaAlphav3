@@ -19,11 +19,30 @@ import java.util.List;
  */
 public class FactionRepository {
     private static final Logger logger = LoggerFactory.getLogger(FactionRepository.class);
-    private final MongoCollection<Faction> collection;
+    private static final String COLLECTION_NAME = "factions";
+    
+    private MongoCollection<Faction> collection;
     
     public FactionRepository() {
-        this.collection = MongoDBConnection.getInstance().getDatabase()
-                .getCollection("factions", Faction.class);
+        try {
+            this.collection = MongoDBConnection.getInstance().getDatabase()
+                .getCollection(COLLECTION_NAME, Faction.class);
+        } catch (IllegalStateException e) {
+            // This can happen during early initialization - handle gracefully
+            logger.warn("MongoDB connection not initialized yet. Usage will be deferred until initialization.");
+        }
+    }
+    
+    /**
+     * Get the MongoDB collection, initializing if needed
+     */
+    private MongoCollection<Faction> getCollection() {
+        if (collection == null) {
+            // Try to get the collection now that MongoDB should be initialized
+            this.collection = MongoDBConnection.getInstance().getDatabase()
+                .getCollection(COLLECTION_NAME, Faction.class);
+        }
+        return collection;
     }
     
     /**
@@ -31,7 +50,7 @@ public class FactionRepository {
      */
     public Faction findById(ObjectId id) {
         try {
-            return collection.find(Filters.eq("_id", id)).first();
+            return getCollection().find(Filters.eq("_id", id)).first();
         } catch (Exception e) {
             logger.error("Error finding faction by ID: {}", id, e);
             return null;
@@ -47,7 +66,7 @@ public class FactionRepository {
                     Filters.eq("guildId", guildId),
                     Filters.regex("name", "^" + name + "$", "i")  // Case-insensitive exact match
             );
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding faction by name: {} in guild: {}", name, guildId, e);
             return null;
@@ -60,7 +79,7 @@ public class FactionRepository {
     public Faction findByName(String name) {
         try {
             Bson filter = Filters.regex("name", "^" + name + "$", "i");  // Case-insensitive exact match
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding faction by name: {}", name, e);
             return null;
@@ -76,7 +95,7 @@ public class FactionRepository {
                     Filters.eq("guildId", guildId),
                     Filters.regex("tag", "^" + tag + "$", "i")  // Case-insensitive exact match
             );
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding faction by tag: {} in guild: {}", tag, guildId, e);
             return null;
@@ -89,7 +108,7 @@ public class FactionRepository {
     public Faction findByTag(String tag) {
         try {
             Bson filter = Filters.regex("tag", "^" + tag + "$", "i");  // Case-insensitive exact match
-            return collection.find(filter).first();
+            return getCollection().find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding faction by tag: {}", tag, e);
             return null;

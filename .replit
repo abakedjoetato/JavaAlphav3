@@ -38,3 +38,7 @@ args = "cd . && java -jar target/deadside-discord-bot-1.0-SNAPSHOT.jar"
 
 [deployment]
 run = ["sh", "-c", "cd . && mvn package -DskipTests"]
+
+[[ports]]
+localPort = 8080
+externalPort = 80

@@ -19,11 +19,30 @@ import java.util.List;
  */
 public class PlayerRepository {
     private static final Logger logger = LoggerFactory.getLogger(PlayerRepository.class);
-    private final MongoCollection<Player> collection;
+    private static final String COLLECTION_NAME = "players";
+    
+    private MongoCollection<Player> collection;
     
     public PlayerRepository() {
-        this.collection = MongoDBConnection.getInstance().getDatabase()
-                .getCollection("players", Player.class);
+        try {
+            this.collection = MongoDBConnection.getInstance().getDatabase()
+                .getCollection(COLLECTION_NAME, Player.class);
+        } catch (IllegalStateException e) {
+            // This can happen during early initialization - handle gracefully
+            logger.warn("MongoDB connection not initialized yet. Usage will be deferred until initialization.");
+        }
+    }
+    
+    /**
+     * Get the MongoDB collection, initializing if needed
+     */
+    private MongoCollection<Player> getCollection() {
+        if (collection == null) {
+            // Try to get the collection now that MongoDB should be initialized
+            this.collection = MongoDBConnection.getInstance().getDatabase()
+                .getCollection(COLLECTION_NAME, Player.class);
+        }
+        return collection;
     }
     
     /**
@@ -31,7 +50,7 @@ public class PlayerRepository {
      */
     public Player findByPlayerId(String playerId) {
         try {
-            return collection.find(Filters.eq("playerId", playerId)).first();
+            return getCollection().find(Filters.eq("playerId", playerId)).first();
         } catch (Exception e) {
             logger.error("Error finding player by ID: {}", playerId, e);
             return null;
@@ -50,7 +69,7 @@ public class PlayerRepository {
      */
     public Player findByName(String name) {
         try {
-            return collection.find(Filters.eq("name", name)).first();
+            return getCollection().find(Filters.eq("name", name)).first();
         } catch (Exception e) {
             logger.error("Error finding player by name: {}", name, e);
             return null;
@@ -75,7 +94,7 @@ public class PlayerRepository {
     public List<Player> findByNameLike(String name) {
         try {
             Bson filter = Filters.regex("name", name, "i"); // Case-insensitive regex
-            return collection.find(filter).into(new ArrayList<>());
+            return getCollection().find(filter).into(new ArrayList<>());
         } catch (Exception e) {
             logger.error("Error finding players by name like: {}", name, e);
             return new ArrayList<>();
@@ -87,7 +106,7 @@ public class PlayerRepository {
      */
     public List<Player> getTopPlayersByKills(int limit) {
         try {
-            return collection.find()
+            return getCollection().find()
                     .sort(Sorts.descending("kills"))
                     .limit(limit)
                     .into(new ArrayList<>());
@@ -103,7 +122,7 @@ public class PlayerRepository {
     public List<Player> getTopPlayersByKD(int limit, int minKills) {
         try {
             Bson filter = Filters.gte("kills", minKills);
-            return collection.find(filter)
+            return getCollection().find(filter)
                     .sort(Sorts.descending("kills"))
                     .limit(limit)
                     .map(player -> {
@@ -129,11 +148,11 @@ public class PlayerRepository {
             player.setLastUpdated(System.currentTimeMillis());
             
             if (player.getId() == null) {
-                collection.insertOne(player);
+                getCollection().insertOne(player);
                 logger.debug("Inserted new player: {}", player.getName());
             } else {
                 Bson filter = Filters.eq("_id", player.getId());
-                collection.replaceOne(filter, player);
+                getCollection().replaceOne(filter, player);
                 logger.debug("Updated player: {}", player.getName());
             }
         } catch (Exception e) {
@@ -151,7 +170,7 @@ public class PlayerRepository {
                     Updates.inc("kills", amount),
                     Updates.set("lastUpdated", System.currentTimeMillis())
             );
-            collection.updateOne(filter, update);
+            getCollection().updateOne(filter, update);
         } catch (Exception e) {
             logger.error("Error incrementing kills for player ID: {}", playerId, e);
         }
@@ -167,7 +186,7 @@ public class PlayerRepository {
                     Updates.inc("deaths", amount),
                     Updates.set("lastUpdated", System.currentTimeMillis())
             );
-            collection.updateOne(filter, update);
+            getCollection().updateOne(filter, update);
         } catch (Exception e) {
             logger.error("Error incrementing deaths for player ID: {}", playerId, e);
         }
@@ -183,7 +202,7 @@ public class PlayerRepository {
                     Updates.inc("suicides", amount),
                     Updates.set("lastUpdated", System.currentTimeMillis())
             );
-            collection.updateOne(filter, update);
+            getCollection().updateOne(filter, update);
         } catch (Exception e) {
             logger.error("Error incrementing suicides for player ID: {}", playerId, e);
         }
@@ -195,7 +214,7 @@ public class PlayerRepository {
      */
     public Player findByDiscordId(String discordId) {
         try {
-            return collection.find(Filters.eq("discordId", discordId)).first();
+            return getCollection().find(Filters.eq("discordId", discordId)).first();
         } catch (Exception e) {
             logger.error("Error finding player by Discord ID: {}", discordId, e);
             return null;
@@ -207,7 +226,7 @@ public class PlayerRepository {
      */
     public List<Player> findByFactionId(ObjectId factionId) {
         try {
-            return collection.find(Filters.eq("factionId", factionId))
+            return getCollection().find(Filters.eq("factionId", factionId))
                     .into(new ArrayList<>());
         } catch (Exception e) {
             logger.error("Error finding players by faction ID: {}", factionId, e);
@@ -220,7 +239,7 @@ public class PlayerRepository {
      */
     public long countByFactionId(ObjectId factionId) {
         try {
-            return collection.countDocuments(Filters.eq("factionId", factionId));
+            return getCollection().countDocuments(Filters.eq("factionId", factionId));
         } catch (Exception e) {
             logger.error("Error counting players by faction ID: {}", factionId, e);
             return 0;
@@ -232,7 +251,7 @@ public class PlayerRepository {
      */
     public List<Player> getTopPlayersByWeapon(String weaponName, int limit) {
         try {
-            return collection.find(Filters.eq("mostUsedWeapon", weaponName))
+            return getCollection().find(Filters.eq("mostUsedWeapon", weaponName))
                     .sort(Sorts.descending("mostUsedWeaponKills"))
                     .limit(limit)
                     .into(new ArrayList<>());
@@ -247,7 +266,7 @@ public class PlayerRepository {
      */
     public long countAll() {
         try {
-            return collection.countDocuments();
+            return getCollection().countDocuments();
         } catch (Exception e) {
             logger.error("Error counting all players", e);
             return 0;
