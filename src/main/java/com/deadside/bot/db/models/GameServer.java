@@ -23,6 +23,8 @@ public class GameServer {
     private String lastProcessedLogFile;
     private long lastProcessedLogLine;
     private long lastProcessedTimestamp;
+    private boolean premium;
+    private long premiumUntil;
     
     public GameServer() {
         // Required for MongoDB POJO codec
@@ -61,6 +63,8 @@ public class GameServer {
         this.lastProcessedLogFile = "";
         this.lastProcessedLogLine = 0;
         this.lastProcessedTimestamp = System.currentTimeMillis();
+        this.premium = false; // Default to not premium
+        this.premiumUntil = 0; // No premium expiration
     }
     
     public ObjectId getId() {
@@ -206,6 +210,73 @@ public class GameServer {
         this.lastProcessedLogFile = file;
         this.lastProcessedLogLine = line;
         this.lastProcessedTimestamp = System.currentTimeMillis();
+    }
+    
+    /**
+     * Check if this server has premium status
+     * @return True if the server has premium
+     */
+    public boolean isPremium() {
+        // Check if premium is enabled and not expired
+        if (!premium) {
+            return false;
+        }
+        
+        // If premiumUntil is 0, it means no expiration (indefinite premium)
+        if (premiumUntil == 0) {
+            return true;
+        }
+        
+        // Check if premium has expired
+        return System.currentTimeMillis() < premiumUntil;
+    }
+    
+    /**
+     * Set premium status for this server
+     * @param premium Whether premium is enabled
+     */
+    public void setPremium(boolean premium) {
+        this.premium = premium;
+    }
+    
+    /**
+     * Get the premium expiration timestamp
+     * @return The timestamp when premium expires, or 0 for no expiration
+     */
+    public long getPremiumUntil() {
+        return premiumUntil;
+    }
+    
+    /**
+     * Set the premium expiration timestamp
+     * @param premiumUntil The timestamp when premium expires, or 0 for no expiration
+     */
+    public void setPremiumUntil(long premiumUntil) {
+        this.premiumUntil = premiumUntil;
+    }
+    
+    /**
+     * Enable premium for this server for a specific duration
+     * @param durationDays Duration in days, or 0 for no expiration
+     */
+    public void enablePremium(int durationDays) {
+        this.premium = true;
+        
+        if (durationDays > 0) {
+            // Calculate expiration timestamp
+            this.premiumUntil = System.currentTimeMillis() + (durationDays * 24L * 60L * 60L * 1000L);
+        } else {
+            // No expiration
+            this.premiumUntil = 0;
+        }
+    }
+    
+    /**
+     * Disable premium for this server
+     */
+    public void disablePremium() {
+        this.premium = false;
+        this.premiumUntil = 0;
     }
     
     // Status related methods needed by StringSelectMenuListener

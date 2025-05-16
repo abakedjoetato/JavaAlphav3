@@ -1,28 +1,43 @@
 package com.deadside.bot.premium;
 
+import com.deadside.bot.db.models.GameServer;
 import com.deadside.bot.db.models.GuildConfig;
+import com.deadside.bot.db.repositories.GameServerRepository;
 import com.deadside.bot.db.repositories.GuildConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Manager for premium features and subscriptions
- * Handles enabling/disabling premium features based on guild subscription status
+ * Handles enabling/disabling premium features based on guild and server subscription status
  */
 public class PremiumManager {
     private static final Logger logger = LoggerFactory.getLogger(PremiumManager.class);
     private final GuildConfigRepository guildConfigRepository;
+    private final GameServerRepository gameServerRepository;
     
     public PremiumManager() {
         this.guildConfigRepository = new GuildConfigRepository();
+        this.gameServerRepository = new GameServerRepository();
     }
     
     /**
      * Check if a guild has premium status
      * @param guildId The Discord guild ID
      * @return True if the guild has an active premium subscription
+     * @deprecated Use hasGuildPremium instead, as this doesn't check individual server premium status
      */
+    @Deprecated
     public boolean hasPremium(long guildId) {
+        return hasGuildPremium(guildId);
+    }
+    
+    /**
+     * Check if a guild has premium status (guild-wide premium)
+     * @param guildId The Discord guild ID
+     * @return True if the guild has an active premium subscription
+     */
+    public boolean hasGuildPremium(long guildId) {
         try {
             GuildConfig guildConfig = guildConfigRepository.findByGuildId(guildId);
             
@@ -30,7 +45,13 @@ public class PremiumManager {
                 return false;
             }
             
-            return guildConfig.isPremium();
+            // If premiumUntil is 0, it means no expiration (indefinite premium)
+            if (guildConfig.isPremium() && guildConfig.getPremiumUntil() == 0) {
+                return true;
+            }
+            
+            // Check if premium is active and not expired
+            return guildConfig.isPremium() && System.currentTimeMillis() < guildConfig.getPremiumUntil();
         } catch (Exception e) {
             logger.error("Error checking premium status for guild ID: {}", guildId, e);
             return false;
@@ -38,11 +59,74 @@ public class PremiumManager {
     }
     
     /**
+     * Check if a specific game server has premium status
+     * @param guildId The Discord guild ID
+     * @param serverName The game server name
+     * @return True if the server has an active premium subscription
+     */
+    public boolean hasServerPremium(long guildId, String serverName) {
+        try {
+            // First check if the guild has premium (legacy check for backwards compatibility)
+            if (hasGuildPremium(guildId)) {
+                return true;
+            }
+            
+            // Check if the specific server has premium
+            GameServer server = gameServerRepository.findByGuildIdAndName(guildId, serverName);
+            if (server == null) {
+                return false;
+            }
+            
+            return server.isPremium();
+        } catch (Exception e) {
+            logger.error("Error checking premium status for server: {} in guild: {}", serverName, guildId, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Count how many premium servers a guild has
+     * @param guildId The Discord guild ID
+     * @return The number of servers with premium status
+     */
+    public int countPremiumServers(long guildId) {
+        try {
+            // If the guild has premium, all servers have premium
+            if (hasGuildPremium(guildId)) {
+                return gameServerRepository.findAllByGuildId(guildId).size();
+            }
+            
+            // Count individual servers with premium
+            int count = 0;
+            for (GameServer server : gameServerRepository.findAllByGuildId(guildId)) {
+                if (server.isPremium()) {
+                    count++;
+                }
+            }
+            return count;
+        } catch (Exception e) {
+            logger.error("Error counting premium servers for guild ID: {}", guildId, e);
+            return 0;
+        }
+    }
+    
+    /**
      * Enable premium for a guild
      * @param guildId The Discord guild ID
      * @param durationDays Duration in days (0 for unlimited)
+     * @deprecated Use enableGuildPremium instead
      */
+    @Deprecated
     public void enablePremium(long guildId, int durationDays) {
+        enableGuildPremium(guildId, durationDays);
+    }
+    
+    /**
+     * Enable premium for a guild (applies to all servers)
+     * @param guildId The Discord guild ID
+     * @param durationDays Duration in days (0 for unlimited)
+     */
+    public void enableGuildPremium(long guildId, int durationDays) {
         try {
             GuildConfig guildConfig = guildConfigRepository.findByGuildId(guildId);
             
@@ -70,10 +154,57 @@ public class PremiumManager {
     }
     
     /**
+     * Enable premium for a specific game server
+     * @param guildId The Discord guild ID
+     * @param serverName The game server name
+     * @param durationDays Duration in days (0 for unlimited)
+     * @return True if premium was enabled successfully, false otherwise
+     */
+    public boolean enableServerPremium(long guildId, String serverName, int durationDays) {
+        try {
+            GameServer server = gameServerRepository.findByGuildIdAndName(guildId, serverName);
+            
+            if (server == null) {
+                logger.error("Cannot enable premium for non-existent server: {} in guild: {}", serverName, guildId);
+                return false;
+            }
+            
+            server.setPremium(true);
+            
+            // Set expiration time if duration is specified
+            if (durationDays > 0) {
+                long expirationTime = System.currentTimeMillis() + (durationDays * 24L * 60L * 60L * 1000L);
+                server.setPremiumUntil(expirationTime);
+                logger.info("Premium enabled for server: {} in guild: {} for {} days (until {})", 
+                        serverName, guildId, durationDays, new java.util.Date(expirationTime));
+            } else {
+                server.setPremiumUntil(0); // No expiration
+                logger.info("Premium enabled for server: {} in guild: {} with no expiration", serverName, guildId);
+            }
+            
+            gameServerRepository.save(server);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error enabling premium for server: {} in guild: {}", serverName, guildId, e);
+            return false;
+        }
+    }
+    
+    /**
      * Disable premium for a guild
      * @param guildId The Discord guild ID
+     * @deprecated Use disableGuildPremium instead
      */
+    @Deprecated
     public void disablePremium(long guildId) {
+        disableGuildPremium(guildId);
+    }
+    
+    /**
+     * Disable premium for a guild (applies to all servers)
+     * @param guildId The Discord guild ID
+     */
+    public void disableGuildPremium(long guildId) {
         try {
             GuildConfig guildConfig = guildConfigRepository.findByGuildId(guildId);
             
@@ -85,6 +216,67 @@ public class PremiumManager {
             }
         } catch (Exception e) {
             logger.error("Error disabling premium for guild ID: {}", guildId, e);
+        }
+    }
+    
+    /**
+     * Disable premium for a specific game server
+     * @param guildId The Discord guild ID
+     * @param serverName The game server name
+     * @return True if premium was disabled successfully, false otherwise
+     */
+    public boolean disableServerPremium(long guildId, String serverName) {
+        try {
+            GameServer server = gameServerRepository.findByGuildIdAndName(guildId, serverName);
+            
+            if (server == null) {
+                logger.error("Cannot disable premium for non-existent server: {} in guild: {}", serverName, guildId);
+                return false;
+            }
+            
+            server.setPremium(false);
+            server.setPremiumUntil(0);
+            gameServerRepository.save(server);
+            
+            logger.info("Premium disabled for server: {} in guild: {}", serverName, guildId);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error disabling premium for server: {} in guild: {}", serverName, guildId, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Get the number of available premium slots for a guild
+     * @param guildId The Discord guild ID
+     * @return The number of premium slots available (1 by default for the free slot)
+     */
+    public int getAvailablePremiumSlots(long guildId) {
+        try {
+            // If the guild has guild-wide premium, return a large number (unlimited)
+            if (hasGuildPremium(guildId)) {
+                return 999;
+            }
+            
+            // Count the number of premium payments made (one server per payment)
+            // For now, using a simple count based on configuration - 1 premium payment = 1 premium slot
+            // In a real implementation, this would check a payments database or payment history
+            
+            GuildConfig guildConfig = guildConfigRepository.findByGuildId(guildId);
+            if (guildConfig == null) {
+                return 1; // Default to 1 free slot
+            }
+            
+            // Check if this guild has made premium payments
+            // For now, we'll just check the premiumSlots setting that would be set when payments are made
+            // This is just a placeholder - in real implementation, this would query payment records
+            int premiumSlots = guildConfig.getPremiumSlots();
+            
+            // Always provide at least 1 slot (the free slot)
+            return Math.max(1, premiumSlots);
+        } catch (Exception e) {
+            logger.error("Error getting available premium slots for guild ID: {}", guildId, e);
+            return 1; // Default to 1 free slot if an error occurs
         }
     }
     
@@ -210,6 +402,34 @@ public class PremiumManager {
     }
     
     /**
+     * Add a premium slot to a guild
+     * @param guildId The Discord guild ID
+     * @param durationDays Duration in days (0 for unlimited)
+     * @return True if the slot was added successfully
+     */
+    public boolean addPremiumSlot(long guildId, int durationDays) {
+        try {
+            GuildConfig guildConfig = guildConfigRepository.findByGuildId(guildId);
+            
+            if (guildConfig == null) {
+                guildConfig = new GuildConfig(guildId);
+            }
+            
+            // Add one premium slot
+            guildConfig.addPremiumSlots(1);
+            
+            logger.info("Added premium slot to guild ID: {}, now has {} slots", 
+                    guildId, guildConfig.getPremiumSlots());
+            
+            guildConfigRepository.save(guildConfig);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error adding premium slot for guild ID: {}", guildId, e);
+            return false;
+        }
+    }
+    
+    /**
      * Process a webhook from Tip4serv
      * @param webhookData JSON data from Tip4serv webhook
      * @return True if webhook was processed successfully
@@ -247,9 +467,30 @@ public class PremiumManager {
                         durationDays = Integer.parseInt(durationMatcher.group(1));
                     }
                     
-                    // Enable premium for the guild
-                    enablePremium(guildId, durationDays);
-                    return true;
+                    // Check if the webhook contains server_name for per-server premium
+                    java.util.regex.Pattern serverNamePattern = java.util.regex.Pattern.compile("\"server_name\":\"([^\"]+)\"");
+                    java.util.regex.Matcher serverNameMatcher = serverNamePattern.matcher(webhookData);
+                    
+                    if (serverNameMatcher.find()) {
+                        // This is a server-specific premium purchase
+                        String serverName = serverNameMatcher.group(1);
+                        logger.info("Server-specific premium purchase for server: {} in guild: {}", serverName, guildId);
+                        
+                        // First add a premium slot to the guild
+                        boolean slotAdded = addPremiumSlot(guildId, durationDays);
+                        
+                        if (!slotAdded) {
+                            logger.error("Failed to add premium slot for guild ID: {}", guildId);
+                            return false;
+                        }
+                        
+                        // Enable premium for the specific server
+                        return enableServerPremium(guildId, serverName, durationDays);
+                    } else {
+                        // Just add a premium slot without assigning to a specific server
+                        logger.info("Premium slot purchase for guild: {}", guildId);
+                        return addPremiumSlot(guildId, durationDays);
+                    }
                 } else {
                     logger.error("Could not extract guild or user ID from webhook data");
                     return false;

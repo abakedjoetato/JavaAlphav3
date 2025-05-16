@@ -1,6 +1,8 @@
 package com.deadside.bot.commands.admin;
 
 import com.deadside.bot.commands.ICommand;
+import com.deadside.bot.db.models.GameServer;
+import com.deadside.bot.db.repositories.GameServerRepository;
 import com.deadside.bot.premium.PremiumManager;
 import com.deadside.bot.utils.EmbedUtils;
 import net.dv8tion.jda.api.Permission;
@@ -14,6 +16,8 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,10 +29,12 @@ import java.awt.Color;
 public class PremiumCommand implements ICommand {
     private static final Logger logger = LoggerFactory.getLogger(PremiumCommand.class);
     private final PremiumManager premiumManager;
+    private final GameServerRepository serverRepository;
     private static final Color PREMIUM_COLOR = new Color(26, 188, 156); // Emerald green color for premium
     
     public PremiumCommand() {
         this.premiumManager = new PremiumManager();
+        this.serverRepository = new GameServerRepository();
     }
     
     @Override
@@ -80,6 +86,18 @@ public class PremiumCommand implements ICommand {
                 
             case "verify":
                 handleVerifySubcommand(event, guild, member);
+                break;
+                
+            case "assign":
+                handleAssignSubcommand(event, guild);
+                break;
+                
+            case "unassign":
+                handleUnassignSubcommand(event, guild);
+                break;
+                
+            case "list":
+                handleListSubcommand(event, guild);
                 break;
                 
             default:
@@ -220,12 +238,204 @@ public class PremiumCommand implements ICommand {
         }
     }
     
+    /**
+     * Handle the /premium assign subcommand
+     * Allows assigning premium to a specific server
+     */
+    private void handleAssignSubcommand(SlashCommandInteractionEvent event, Guild guild) {
+        String serverName = event.getOption("server", OptionMapping::getAsString);
+        if (serverName == null) {
+            event.replyEmbeds(EmbedUtils.errorEmbed("Error", "You must specify a server name."))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+        
+        // Check if the server exists
+        GameServer server = serverRepository.findByGuildIdAndName(guild.getIdLong(), serverName);
+        if (server == null) {
+            event.replyEmbeds(EmbedUtils.errorEmbed("Error", 
+                    "Server '" + serverName + "' does not exist. Use `/server add` to create it first."))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+        
+        // Check if the guild has premium slots available
+        int premiumSlots = premiumManager.getAvailablePremiumSlots(guild.getIdLong());
+        int usedSlots = premiumManager.countPremiumServers(guild.getIdLong());
+        
+        if (premiumSlots <= usedSlots && !premiumManager.hasGuildPremium(guild.getIdLong())) {
+            event.replyEmbeds(EmbedUtils.errorEmbed("No Premium Slots Available", 
+                    "You don't have any available premium slots. Purchase more premium slots or free up a slot by unassigning premium from another server."))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+        
+        // The server already has premium
+        if (server.isPremium()) {
+            event.replyEmbeds(EmbedUtils.customEmbed("Already Premium", 
+                    "The server '" + serverName + "' already has premium features enabled.",
+                    PREMIUM_COLOR))
+                .queue();
+            return;
+        }
+        
+        // Assign premium to this server
+        boolean success = premiumManager.enableServerPremium(guild.getIdLong(), serverName, 30); // Default to 30 days
+        
+        if (success) {
+            event.replyEmbeds(EmbedUtils.successEmbed("Premium Assigned", 
+                    "✨ Successfully assigned premium to server '" + serverName + "'.\n\n" +
+                    "This server now has access to all premium features!"))
+                .queue();
+            
+            logger.info("Premium assigned to server '{}' in guild {}", serverName, guild.getId());
+        } else {
+            event.replyEmbeds(EmbedUtils.errorEmbed("Error", 
+                    "Failed to assign premium to server '" + serverName + "'. Please try again later."))
+                .setEphemeral(true)
+                .queue();
+        }
+    }
+    
+    /**
+     * Handle the /premium unassign subcommand
+     * Allows removing premium from a specific server
+     */
+    private void handleUnassignSubcommand(SlashCommandInteractionEvent event, Guild guild) {
+        String serverName = event.getOption("server", OptionMapping::getAsString);
+        if (serverName == null) {
+            event.replyEmbeds(EmbedUtils.errorEmbed("Error", "You must specify a server name."))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+        
+        // Check if the server exists
+        GameServer server = serverRepository.findByGuildIdAndName(guild.getIdLong(), serverName);
+        if (server == null) {
+            event.replyEmbeds(EmbedUtils.errorEmbed("Error", 
+                    "Server '" + serverName + "' does not exist."))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+        
+        // The server doesn't have premium
+        if (!server.isPremium()) {
+            event.replyEmbeds(EmbedUtils.customEmbed("Not Premium", 
+                    "The server '" + serverName + "' doesn't have premium features enabled.",
+                    new Color(189, 195, 199)))
+                .queue();
+            return;
+        }
+        
+        // Check if it's a guild-wide premium
+        if (premiumManager.hasGuildPremium(guild.getIdLong())) {
+            event.replyEmbeds(EmbedUtils.customEmbed("Guild Premium", 
+                    "This guild has guild-wide premium, which affects all servers. " +
+                    "You need to disable guild premium before managing individual servers.",
+                    PREMIUM_COLOR))
+                .queue();
+            return;
+        }
+        
+        // Remove premium from this server
+        boolean success = premiumManager.disableServerPremium(guild.getIdLong(), serverName);
+        
+        if (success) {
+            event.replyEmbeds(EmbedUtils.successEmbed("Premium Unassigned", 
+                    "Premium has been removed from server '" + serverName + "'.\n\n" +
+                    "This server now has only basic (killfeed) features."))
+                .queue();
+            
+            logger.info("Premium unassigned from server '{}' in guild {}", serverName, guild.getId());
+        } else {
+            event.replyEmbeds(EmbedUtils.errorEmbed("Error", 
+                    "Failed to unassign premium from server '" + serverName + "'. Please try again later."))
+                .setEphemeral(true)
+                .queue();
+        }
+    }
+    
+    /**
+     * Handle the /premium list subcommand
+     * Lists all servers and their premium status
+     */
+    private void handleListSubcommand(SlashCommandInteractionEvent event, Guild guild) {
+        List<GameServer> servers = serverRepository.findAllByGuildId(guild.getIdLong());
+        
+        if (servers.isEmpty()) {
+            event.replyEmbeds(EmbedUtils.customEmbed("No Servers", 
+                    "You don't have any game servers configured yet. Use `/server add` to add your first server.",
+                    new Color(189, 195, 199)))
+                .queue();
+            return;
+        }
+        
+        // Build the server list
+        StringBuilder message = new StringBuilder();
+        
+        boolean guildHasPremium = premiumManager.hasGuildPremium(guild.getIdLong());
+        int availableSlots = premiumManager.getAvailablePremiumSlots(guild.getIdLong());
+        int usedSlots = 0;
+        
+        // Count premium servers
+        for (GameServer server : servers) {
+            if (server.isPremium()) {
+                usedSlots++;
+            }
+        }
+        
+        if (guildHasPremium) {
+            message.append("**✨ This guild has GUILD-WIDE PREMIUM ✨**\n");
+            message.append("All servers automatically have premium features.\n\n");
+        } else {
+            message.append("**Premium Slots**: ").append(usedSlots).append("/").append(availableSlots).append("\n\n");
+        }
+        
+        message.append("**Your Game Servers:**\n");
+        
+        for (GameServer server : servers) {
+            String status;
+            if (server.isPremium()) {
+                status = "✨ **PREMIUM**";
+                if (server.getPremiumUntil() > 0) {
+                    long daysRemaining = (server.getPremiumUntil() - System.currentTimeMillis()) / (24L * 60L * 60L * 1000L);
+                    status += " (expires in " + daysRemaining + " days)";
+                }
+            } else {
+                status = "⚠️ **BASIC** (killfeed only)";
+            }
+            
+            message.append("• **").append(server.getName()).append("** - ").append(status).append("\n");
+        }
+        
+        if (!guildHasPremium && availableSlots > usedSlots) {
+            message.append("\nYou have **").append(availableSlots - usedSlots)
+                   .append("** unused premium slot(s). Use `/premium assign` to assign premium to a server.");
+        } else if (!guildHasPremium && availableSlots <= usedSlots) {
+            message.append("\nYou have used all your premium slots. To add more, purchase additional premium slots.");
+        }
+        
+        event.replyEmbeds(EmbedUtils.customEmbed("Server Premium Status", message.toString(), 
+                PREMIUM_COLOR))
+            .queue();
+    }
+    
     @Override
     public CommandData getCommandData() {
         return Commands.slash("premium", "Manage premium features and subscription")
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
             .addSubcommands(
                 new SubcommandData("status", "Check the premium status of this server"),
+                new SubcommandData("list", "List all servers and their premium status"),
+                new SubcommandData("assign", "Assign premium to a specific game server")
+                    .addOption(OptionType.STRING, "server", "The name of the game server to assign premium to", true),
+                new SubcommandData("unassign", "Remove premium from a specific game server")
+                    .addOption(OptionType.STRING, "server", "The name of the game server to remove premium from", true),
                 new SubcommandData("verify", "Verify a premium payment for this server"),
                 new SubcommandData("enable", "Enable premium features for this server (Bot Owner Only)")
                     .addOption(OptionType.INTEGER, "days", "Duration in days (0 for unlimited)", false),

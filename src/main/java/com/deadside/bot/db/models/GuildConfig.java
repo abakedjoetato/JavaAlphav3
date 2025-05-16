@@ -84,6 +84,38 @@ public class GuildConfig {
         this.updatedAt = System.currentTimeMillis();
     }
     
+    /**
+     * Get the number of premium slots available to this guild
+     * Each premium slot can be assigned to one server
+     * @return The number of premium slots
+     */
+    public int getPremiumSlots() {
+        String slotsStr = getSetting("premiumSlots", "0");
+        try {
+            return Integer.parseInt(slotsStr);
+        } catch (NumberFormatException e) {
+            logger.error("Invalid premium slots value: {}", slotsStr, e);
+            return 0;
+        }
+    }
+    
+    /**
+     * Set the number of premium slots available to this guild
+     * @param slots The number of premium slots
+     */
+    public void setPremiumSlots(int slots) {
+        setSetting("premiumSlots", String.valueOf(slots));
+    }
+    
+    /**
+     * Add premium slots to this guild
+     * @param slots The number of slots to add
+     */
+    public void addPremiumSlots(int slots) {
+        int currentSlots = getPremiumSlots();
+        setPremiumSlots(currentSlots + slots);
+    }
+    
     public String getKillfeedChannelId() {
         return killfeedChannelId;
     }

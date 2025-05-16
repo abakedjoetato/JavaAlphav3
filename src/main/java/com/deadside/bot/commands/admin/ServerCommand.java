@@ -37,6 +37,7 @@ public class ServerCommand implements ICommand {
     private final GameServerRepository serverRepository = new GameServerRepository();
     private final GuildConfigRepository guildConfigRepository = new GuildConfigRepository();
     private final SftpManager sftpManager = new SftpManager();
+    private final com.deadside.bot.premium.PremiumManager premiumManager = new com.deadside.bot.premium.PremiumManager();
     
     @Override
     public String getName() {
@@ -136,6 +137,27 @@ public class ServerCommand implements ICommand {
             return;
         }
         
+        // Check if guild has a premium subscription that would cover all servers
+        boolean guildHasPremium = premiumManager.hasGuildPremium(guild.getIdLong());
+        
+        // If guild doesn't have premium, check how many premium servers they already have
+        if (!guildHasPremium) {
+            // Count how many servers already have premium
+            int premiumServerCount = premiumManager.countPremiumServers(guild.getIdLong());
+            int existingServerCount = serverRepository.findAllByGuildId(guild.getIdLong()).size();
+            
+            // Allow one free server per guild (killfeed only)
+            if (existingServerCount > 0 && premiumServerCount < existingServerCount) {
+                event.getHook().sendMessageEmbeds(
+                    EmbedUtils.errorEmbed("Premium Required", 
+                            "You need to purchase premium for this server before adding it.\n\n" +
+                            "Each additional server beyond the first requires its own premium subscription.\n" +
+                            "Please use the `/premium purchase` command to get premium for this server.")
+                ).queue();
+                return;
+            }
+        }
+        
         // Create new server
         GameServer gameServer = new GameServer(
                 guild.getIdLong(),
@@ -155,18 +177,53 @@ public class ServerCommand implements ICommand {
                 return;
             }
             
+            // If guild has premium, automatically mark this server as premium too
+            if (guildHasPremium) {
+                // Copy the premium duration from the guild to the server
+                if (guildConfig.getPremiumUntil() > 0) {
+                    gameServer.setPremium(true);
+                    gameServer.setPremiumUntil(guildConfig.getPremiumUntil());
+                } else {
+                    // Guild has unlimited premium
+                    gameServer.setPremium(true);
+                    gameServer.setPremiumUntil(0);
+                }
+            } else if (serverRepository.findAllByGuildId(guild.getIdLong()).isEmpty()) {
+                // This is the first server for this guild - it gets basic tier (killfeed only) for free
+                gameServer.setPremium(false);
+                gameServer.setPremiumUntil(0);
+            }
+            
             // Save the server if connection was successful
             serverRepository.save(gameServer);
             
+            // Build success message
+            StringBuilder successMessage = new StringBuilder();
+            successMessage.append("Successfully added server **").append(name).append("**\n");
+            successMessage.append("Host: ").append(host).append("\n");
+            successMessage.append("Port: ").append(port).append("\n");
+            successMessage.append("Game Server ID: ").append(gameServerId).append("\n\n");
+            
+            // Add premium status to the message
+            if (gameServer.isPremium()) {
+                successMessage.append("🌟 **PREMIUM SERVER** 🌟\n");
+                if (gameServer.getPremiumUntil() > 0) {
+                    long daysRemaining = (gameServer.getPremiumUntil() - System.currentTimeMillis()) / (24L * 60L * 60L * 1000L);
+                    successMessage.append("Premium expires in ").append(daysRemaining).append(" days\n\n");
+                } else {
+                    successMessage.append("Premium never expires\n\n");
+                }
+            } else {
+                successMessage.append("⚠️ **BASIC SERVER - KILLFEED ONLY** ⚠️\n");
+                successMessage.append("Upgrade to premium to unlock all features: `/premium purchase`\n\n");
+            }
+            
+            successMessage.append("You can set a killfeed channel with `/server setkillfeed ").append(name).append(" #channel`\n");
+            successMessage.append("The bot will look for logs in: ").append(gameServer.getLogDirectory()).append("\n");
+            successMessage.append("And deathlogs in: ").append(gameServer.getDeathlogsDirectory());
+            
             event.getHook().sendMessageEmbeds(
-                    EmbedUtils.successEmbed("Server Added", 
-                            "Successfully added server **" + name + "**\n" +
-                            "Host: " + host + "\n" +
-                            "Port: " + port + "\n" +
-                            "Game Server ID: " + gameServerId + "\n\n" +
-                            "You can set a killfeed channel with `/server setkillfeed " + name + " #channel`\n" +
-                            "The bot will look for logs in: " + gameServer.getLogDirectory() + "\n" +
-                            "And deathlogs in: " + gameServer.getDeathlogsDirectory())
+                    EmbedUtils.successEmbed("Server Added", successMessage.toString())
             ).queue();
             
             logger.info("Added new game server '{}' for guild {}", name, guild.getId());
