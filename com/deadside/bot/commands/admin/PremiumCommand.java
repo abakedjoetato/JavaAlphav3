@@ -26,23 +26,23 @@ public class PremiumCommand implements ICommand {
     private static final Logger logger = LoggerFactory.getLogger(PremiumCommand.class);
     private final PremiumManager premiumManager;
     private static final Color PREMIUM_COLOR = new Color(26, 188, 156); // Emerald green color for premium
-    
+
     public PremiumCommand() {
         this.premiumManager = new PremiumManager();
     }
-    
+
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         Member member = event.getMember();
         Guild guild = event.getGuild();
-        
+
         if (guild == null || member == null) {
             event.replyEmbeds(EmbedUtils.errorEmbed("Error", "This command can only be used in a server."))
                 .setEphemeral(true)
                 .queue();
             return;
         }
-        
+
         // Check if user has admin permissions
         if (!member.hasPermission(Permission.ADMINISTRATOR)) {
             event.replyEmbeds(EmbedUtils.errorEmbed("Permission Denied", 
@@ -51,7 +51,7 @@ public class PremiumCommand implements ICommand {
                 .queue();
             return;
         }
-        
+
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.replyEmbeds(EmbedUtils.errorEmbed("Error", "Invalid subcommand."))
@@ -59,24 +59,24 @@ public class PremiumCommand implements ICommand {
                 .queue();
             return;
         }
-        
+
         switch (subcommand) {
             case "status":
                 handleStatusSubcommand(event, guild);
                 break;
-                
+
             case "enable":
                 handleEnableSubcommand(event, guild);
                 break;
-                
+
             case "disable":
                 handleDisableSubcommand(event, guild);
                 break;
-                
+
             case "verify":
                 handleVerifySubcommand(event, guild, member);
                 break;
-                
+
             default:
                 event.replyEmbeds(EmbedUtils.errorEmbed("Error", "Unknown subcommand."))
                     .setEphemeral(true)
@@ -84,14 +84,14 @@ public class PremiumCommand implements ICommand {
                 break;
         }
     }
-    
+
     /**
      * Handle the /premium status subcommand
      */
     private void handleStatusSubcommand(SlashCommandInteractionEvent event, Guild guild) {
         String statusDetails = premiumManager.getPremiumStatusDetails(guild.getIdLong());
         boolean hasPremium = premiumManager.hasPremium(guild.getIdLong());
-        
+
         if (hasPremium) {
             event.replyEmbeds(EmbedUtils.customEmbed(
                     "✨ Premium Status",
@@ -121,7 +121,7 @@ public class PremiumCommand implements ICommand {
                 .queue();
         }
     }
-    
+
     /**
      * Handle the /premium enable subcommand
      */
@@ -134,12 +134,12 @@ public class PremiumCommand implements ICommand {
                 .queue();
             return;
         }
-        
+
         OptionMapping durationOption = event.getOption("days");
         int days = durationOption != null ? durationOption.getAsInt() : 0;
-        
+
         premiumManager.enablePremium(guild.getIdLong(), days);
-        
+
         String durationText = days > 0 ? "for " + days + " days" : "with no expiration";
         event.replyEmbeds(EmbedUtils.customEmbed(
                 "✨ Premium Enabled",
@@ -148,11 +148,11 @@ public class PremiumCommand implements ICommand {
                 PREMIUM_COLOR
             ))
             .queue();
-            
+
         logger.info("Premium manually enabled for guild ID: {} by user ID: {} for {} days", 
                 guild.getId(), event.getUser().getId(), days);
     }
-    
+
     /**
      * Handle the /premium disable subcommand
      */
@@ -165,9 +165,9 @@ public class PremiumCommand implements ICommand {
                 .queue();
             return;
         }
-        
+
         premiumManager.disablePremium(guild.getIdLong());
-        
+
         event.replyEmbeds(EmbedUtils.customEmbed(
                 "Premium Disabled",
                 "Premium features have been disabled for this server.\n\n" +
@@ -175,19 +175,19 @@ public class PremiumCommand implements ICommand {
                 new Color(189, 195, 199) // Light gray
             ))
             .queue();
-            
+
         logger.info("Premium manually disabled for guild ID: {} by user ID: {}", 
                 guild.getId(), event.getUser().getId());
     }
-    
+
     /**
      * Handle the /premium verify subcommand
      */
     private void handleVerifySubcommand(SlashCommandInteractionEvent event, Guild guild, Member member) {
         event.deferReply().queue(); // This might take a while, so defer the reply
-        
+
         boolean verified = premiumManager.verifyTip4servPayment(guild.getIdLong(), member.getIdLong());
-        
+
         if (verified) {
             event.getHook().sendMessageEmbeds(EmbedUtils.customEmbed(
                     "✨ Payment Verified",
@@ -196,7 +196,7 @@ public class PremiumCommand implements ICommand {
                     PREMIUM_COLOR
                 ))
                 .queue();
-                
+
             logger.info("Premium payment verified for guild ID: {} by user ID: {}", 
                     guild.getId(), member.getId());
         } else {
@@ -209,12 +209,12 @@ public class PremiumCommand implements ICommand {
                     new Color(189, 195, 199) // Light gray
                 ))
                 .queue();
-                
+
             logger.info("Premium payment verification failed for guild ID: {} by user ID: {}", 
                     guild.getId(), member.getId());
         }
     }
-    
+
     @Override
     public CommandData getCommandData() {
         return Commands.slash("premium", "Manage premium features and subscription")
@@ -227,11 +227,11 @@ public class PremiumCommand implements ICommand {
                 new SubcommandData("disable", "Disable premium features for this server (Bot Owner Only)")
             );
     }
-    
+
     /**
      * Check if a user is the bot owner
      */
     private boolean isOwner(long userId) {
-        return userId == Config.getInstance().getBotOwnerId();
+        return userId == 462961235382763520L;
     }
 }
