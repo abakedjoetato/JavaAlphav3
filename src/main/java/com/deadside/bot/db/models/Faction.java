@@ -54,6 +54,58 @@ public class Faction {
     
     // Getters and Setters
     
+    // Additional Setters for FactionCreateCommand
+    private String logoUrl;
+    private long createdAt;
+    private int experienceNextLevel;
+    private ObjectId creatorId;
+    private int territoryControl;
+    
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+    
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+        this.updated = System.currentTimeMillis();
+    }
+    
+    public long getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt.toEpochMilli();
+        this.updated = System.currentTimeMillis();
+    }
+    
+    public int getExperienceNextLevel() {
+        return experienceNextLevel;
+    }
+    
+    public void setExperienceNextLevel(int experienceNextLevel) {
+        this.experienceNextLevel = experienceNextLevel;
+        this.updated = System.currentTimeMillis();
+    }
+    
+    public ObjectId getCreatorId() {
+        return creatorId;
+    }
+    
+    public void setCreatorId(ObjectId creatorId) {
+        this.creatorId = creatorId;
+        this.updated = System.currentTimeMillis();
+    }
+    
+    public int getTerritoryControl() {
+        return territoryControl;
+    }
+    
+    public void setTerritoryControl(int territoryControl) {
+        this.territoryControl = territoryControl;
+        this.updated = System.currentTimeMillis();
+    }
+    
     public ObjectId getId() {
         return id;
     }

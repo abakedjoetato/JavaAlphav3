@@ -2,6 +2,7 @@ package com.deadside.bot.db.models;
 
 import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.types.ObjectId;
+import java.time.Instant;
 
 /**
  * Database model for a Deadside player
@@ -23,6 +24,8 @@ public class Player {
     private long lastUpdated;    // Timestamp of last update
     private Currency currency;   // Player's currency and economy data
     private FactionMember factionMember;  // Player's faction membership
+    private ObjectId factionId;  // ID of the faction the player belongs to
+    private Instant factionJoinDate; // When the player joined the faction
     
     public Player() {
         // Required for MongoDB POJO codec
@@ -294,5 +297,69 @@ public class Player {
      */
     public void setDeadsideId(String deadsideId) {
         this.playerId = deadsideId;
+    }
+    
+    /**
+     * Get the faction ID
+     */
+    public ObjectId getFactionId() {
+        return factionId;
+    }
+    
+    /**
+     * Set the faction ID
+     */
+    public void setFactionId(ObjectId factionId) {
+        this.factionId = factionId;
+    }
+    
+    /**
+     * Get the faction join date
+     */
+    public Instant getFactionJoinDate() {
+        return factionJoinDate;
+    }
+    
+    /**
+     * Set the faction join date
+     */
+    public void setFactionJoinDate(Instant factionJoinDate) {
+        this.factionJoinDate = factionJoinDate;
+    }
+    
+    /**
+     * Check if the player is a faction leader
+     */
+    public boolean isFactionLeader() {
+        return isInFaction() && factionMember != null && factionMember.isLeader();
+    }
+    
+    /**
+     * Check if the player is a faction officer
+     */
+    public boolean isFactionOfficer() {
+        return isInFaction() && factionMember != null && factionMember.isOfficer();
+    }
+    
+    /**
+     * Set faction leader status directly
+     */
+    public void setFactionLeader(boolean isLeader) {
+        if (this.factionMember == null) {
+            this.factionMember = new FactionMember();
+        }
+        this.factionMember.setLeader(isLeader);
+        this.lastUpdated = System.currentTimeMillis();
+    }
+    
+    /**
+     * Set faction officer status directly
+     */
+    public void setFactionOfficer(boolean isOfficer) {
+        if (this.factionMember == null) {
+            this.factionMember = new FactionMember();
+        }
+        this.factionMember.setOfficer(isOfficer);
+        this.lastUpdated = System.currentTimeMillis();
     }
 }

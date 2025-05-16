@@ -98,7 +98,7 @@ public class StringSelectMenuListener extends ListenerAdapter {
         
         try {
             long serverId = Long.parseLong(selectedServerId);
-            GameServer server = gameServerRepository.findById(serverId);
+            GameServer server = gameServerRepository.findById(selectedServerId);
             
             if (server == null) {
                 event.reply("Server not found. It may have been deleted.").setEphemeral(true).queue();
@@ -224,7 +224,7 @@ public class StringSelectMenuListener extends ListenerAdapter {
             }
             
             long factionId = Long.parseLong(selectedFactionId);
-            Faction faction = factionRepository.findById(factionId);
+            Faction faction = factionRepository.findById(new org.bson.types.ObjectId(selectedFactionId));
             
             if (faction == null) {
                 event.reply("Faction not found. It may have been disbanded.").setEphemeral(true).queue();

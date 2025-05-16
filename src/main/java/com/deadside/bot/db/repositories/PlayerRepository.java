@@ -57,6 +57,18 @@ public class PlayerRepository {
     }
     
     /**
+     * Find a player by exact name (alias method)
+     */
+    public List<Player> findByNameExact(String name) {
+        Player player = findByName(name);
+        List<Player> players = new ArrayList<>();
+        if (player != null) {
+            players.add(player);
+        }
+        return players;
+    }
+    
+    /**
      * Find players by approximate name (case-insensitive)
      */
     public List<Player> findByNameLike(String name) {
@@ -173,6 +185,19 @@ public class PlayerRepository {
             collection.updateOne(filter, update);
         } catch (Exception e) {
             logger.error("Error incrementing suicides for player ID: {}", playerId, e);
+        }
+    }
+    
+    /**
+     * Find a player by Discord ID
+     * This method retrieves a player linked to a Discord user ID
+     */
+    public Player findByDiscordId(String discordId) {
+        try {
+            return collection.find(Filters.eq("discordId", discordId)).first();
+        } catch (Exception e) {
+            logger.error("Error finding player by Discord ID: {}", discordId, e);
+            return null;
         }
     }
 }

@@ -32,6 +32,11 @@ public class PremiumCommand implements ICommand {
     }
     
     @Override
+    public String getName() {
+        return "premium";
+    }
+    
+    @Override
     public void execute(SlashCommandInteractionEvent event) {
         Member member = event.getMember();
         Guild guild = event.getGuild();

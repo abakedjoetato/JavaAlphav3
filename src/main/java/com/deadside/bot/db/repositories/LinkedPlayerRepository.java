@@ -55,6 +55,17 @@ public class LinkedPlayerRepository {
     }
     
     /**
+     * Find a linked player by in-game player ID (using ObjectId)
+     * This is a convenience method that converts ObjectId to string
+     */
+    public LinkedPlayer findByPlayerId(org.bson.types.ObjectId playerId) {
+        if (playerId == null) {
+            return null;
+        }
+        return findByPlayerId(playerId.toString());
+    }
+    
+    /**
      * Save or update a linked player
      */
     public void save(LinkedPlayer linkedPlayer) {

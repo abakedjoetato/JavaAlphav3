@@ -87,6 +87,10 @@ public class FactionMember {
         return role == 2;
     }
     
+    public boolean isLeader() {
+        return role == 2;  // Alias for isOwner for code readability
+    }
+    
     public boolean isOfficer() {
         return role == 1;
     }

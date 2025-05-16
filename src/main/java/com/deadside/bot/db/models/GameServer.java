@@ -28,6 +28,23 @@ public class GameServer {
         // Required for MongoDB POJO codec
     }
     
+    public GameServer(String name, String host, int port, String username, String password, long guildId) {
+        this.guildId = guildId;
+        this.name = name;
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.gameServerId = 1; // Default to 1
+        this.killfeedChannelId = 0;
+        this.logChannelId = 0;
+        this.lastProcessedKillfeedFile = "";
+        this.lastProcessedKillfeedLine = 0;
+        this.lastProcessedLogFile = "";
+        this.lastProcessedLogLine = 0;
+        this.lastProcessedTimestamp = System.currentTimeMillis();
+    }
+    
     public GameServer(long guildId, String name, String host, int port, String username, String password, 
                       int gameServerId) {
         this.guildId = guildId;
@@ -189,5 +206,69 @@ public class GameServer {
         this.lastProcessedLogFile = file;
         this.lastProcessedLogLine = line;
         this.lastProcessedTimestamp = System.currentTimeMillis();
+    }
+    
+    // Status related methods needed by StringSelectMenuListener
+    
+    /**
+     * Check if the server is currently online
+     */
+    public boolean isOnline() {
+        // This should ideally be determined by server status checks
+        // For now, we'll use a simple heuristic: if updated in the last 5 minutes
+        return System.currentTimeMillis() - lastProcessedTimestamp < 5 * 60 * 1000;
+    }
+    
+    /**
+     * Get the current player count
+     */
+    public int getPlayerCount() {
+        // This should be updated by server status checks
+        return 0; // Placeholder
+    }
+    
+    /**
+     * Get the maximum number of players allowed
+     */
+    public int getMaxPlayers() {
+        // This should be fetched from server config
+        return 64; // Default value
+    }
+    
+    /**
+     * Get the server uptime in seconds
+     */
+    public long getUptime() {
+        // This should be updated by server status checks
+        return 0; // Placeholder
+    }
+    
+    /**
+     * Check if event notifications are enabled for this server
+     */
+    public boolean isEventNotificationsEnabled() {
+        // This could be a configuration option
+        return this.logChannelId > 0; // If log channel is set, assume notifications are enabled
+    }
+    
+    /**
+     * Get the last updated timestamp
+     */
+    public long getLastUpdated() {
+        return lastProcessedTimestamp;
+    }
+    
+    /**
+     * Check if killfeed is enabled for this server
+     */
+    public boolean isKillfeedEnabled() {
+        return this.killfeedChannelId > 0;
+    }
+    
+    /**
+     * Check if join/leave notifications are enabled for this server
+     */
+    public boolean isJoinLeaveNotificationsEnabled() {
+        return this.logChannelId > 0;
     }
 }

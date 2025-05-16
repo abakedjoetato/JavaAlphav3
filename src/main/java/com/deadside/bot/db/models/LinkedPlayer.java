@@ -33,6 +33,15 @@ public class LinkedPlayer {
         this.updated = this.created;
     }
     
+    public LinkedPlayer(long discordId, long playerId) {
+        this.discordId = discordId;
+        this.mainPlayerId = String.valueOf(playerId);
+        this.mainPlayerName = "Player-" + playerId;
+        this.altPlayerIds = new ArrayList<>();
+        this.created = System.currentTimeMillis();
+        this.updated = this.created;
+    }
+    
     public ObjectId getId() {
         return id;
     }

@@ -55,6 +55,19 @@ public class FactionRepository {
     }
     
     /**
+     * Find a faction by name (generic version, not guild-specific)
+     */
+    public Faction findByName(String name) {
+        try {
+            Bson filter = Filters.regex("name", "^" + name + "$", "i");  // Case-insensitive exact match
+            return collection.find(filter).first();
+        } catch (Exception e) {
+            logger.error("Error finding faction by name: {}", name, e);
+            return null;
+        }
+    }
+    
+    /**
      * Find a faction by tag in a guild
      */
     public Faction findByTagInGuild(long guildId, String tag) {
@@ -66,6 +79,19 @@ public class FactionRepository {
             return collection.find(filter).first();
         } catch (Exception e) {
             logger.error("Error finding faction by tag: {} in guild: {}", tag, guildId, e);
+            return null;
+        }
+    }
+    
+    /**
+     * Find a faction by tag (not guild-specific)
+     */
+    public Faction findByTag(String tag) {
+        try {
+            Bson filter = Filters.regex("tag", "^" + tag + "$", "i");  // Case-insensitive exact match
+            return collection.find(filter).first();
+        } catch (Exception e) {
+            logger.error("Error finding faction by tag: {}", tag, e);
             return null;
         }
     }
@@ -112,6 +138,13 @@ public class FactionRepository {
             logger.error("Error finding factions by guild: {}", guildId, e);
             return new ArrayList<>();
         }
+    }
+    
+    /**
+     * Find all factions in a guild (alias method)
+     */
+    public List<Faction> findAllByGuildId(long guildId) {
+        return findByGuild(guildId);
     }
     
     /**

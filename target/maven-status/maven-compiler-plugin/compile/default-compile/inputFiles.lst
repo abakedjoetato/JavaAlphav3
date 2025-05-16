@@ -1,3 +1,4 @@
+/home/runner/workspace/src/main/java/com/deadside/bot/commands/Command.java
 /home/runner/workspace/src/main/java/com/deadside/bot/faction/FactionStatsSync.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/economy/DailyCommand.java
 /home/runner/workspace/src/main/java/com/deadside/bot/db/models/Faction.java
@@ -5,8 +6,8 @@
 /home/runner/workspace/src/main/java/com/deadside/bot/premium/PremiumManager.java
 /home/runner/workspace/src/main/java/com/deadside/bot/sftp/SftpConnector.java
 /home/runner/workspace/src/main/java/com/deadside/bot/parsers/DeadsideLogParser.java
-/home/runner/workspace/src/main/java/com/deadside/bot/commands/stats/RankCommand.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/CommandManager.java
+/home/runner/workspace/src/main/java/com/deadside/bot/commands/stats/RankCommand.java
 /home/runner/workspace/src/main/java/com/deadside/bot/db/MongoDBConnection.java
 /home/runner/workspace/src/main/java/com/deadside/bot/utils/GuildIsolationManager.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/faction/FactionStatsCommand.java
@@ -48,8 +49,8 @@
 /home/runner/workspace/src/main/java/com/deadside/bot/ui/SelectMenuBuilder.java
 /home/runner/workspace/src/main/java/com/deadside/bot/commands/economy/WorkCommand.java
 /home/runner/workspace/src/main/java/com/deadside/bot/listeners/CommandListener.java
-/home/runner/workspace/src/main/java/com/deadside/bot/db/repositories/LinkedPlayerRepository.java
 /home/runner/workspace/src/main/java/com/deadside/bot/Main.java
+/home/runner/workspace/src/main/java/com/deadside/bot/db/repositories/LinkedPlayerRepository.java
 /home/runner/workspace/src/main/java/com/deadside/bot/premium/FeatureGate.java
 /home/runner/workspace/src/main/java/com/deadside/bot/utils/LogParserTester.java
 /home/runner/workspace/src/main/java/com/deadside/bot/db/models/Currency.java

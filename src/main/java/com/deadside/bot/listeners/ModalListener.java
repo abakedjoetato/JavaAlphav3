@@ -128,8 +128,8 @@ public class ModalListener extends ListenerAdapter {
         } else {
             // Update existing server
             try {
-                long serverIdLong = Long.parseLong(serverId);
-                gameServer = gameServerRepository.findById(serverIdLong);
+                // Use the serverId directly as a string
+                gameServer = gameServerRepository.findById(serverId);
                 
                 if (gameServer == null) {
                     event.getHook().sendMessageEmbeds(
@@ -300,7 +300,7 @@ public class ModalListener extends ListenerAdapter {
         }
         
         Player player = players.get(0);
-        long playerId = player.getId();
+        ObjectId playerId = player.getId();
         
         // Check if player is already linked
         LinkedPlayer linkedPlayer = linkedPlayerRepository.findByPlayerId(playerId);
@@ -378,8 +378,11 @@ public class ModalListener extends ListenerAdapter {
         
         // Extract values from the modal
         String durationStr = event.getValue("duration").getAsString();
-        String discountCode = event.getValueByName("discount_code") != null ? 
-                event.getValueByName("discount_code").getAsString() : null;
+        String discountCode = event.getValues().stream()
+                .filter(value -> value.getId().equals("discount_code"))
+                .findFirst()
+                .map(value -> value.getAsString())
+                .orElse(null);
         
         // Validate duration
         int duration;
