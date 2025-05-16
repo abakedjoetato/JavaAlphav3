@@ -102,19 +102,7 @@ public class Config {
     }
 
     public long getBotOwnerId() {
-        // Hardcoded owner ID as requested
-        return 462961235382763520L;
-        
-        // Commented out original code for reference
-        /*
-        String ownerId = getProperty(BOT_OWNER_ID, "0");
-        try {
-            return Long.parseLong(ownerId);
-        } catch (NumberFormatException e) {
-            logger.warn("Invalid bot owner ID in configuration", e);
-            return 0L;
-        }
-        */
+        return 462961235382763520L; // Hardcoded owner ID
     }
 
     public long getHomeGuildId() {
